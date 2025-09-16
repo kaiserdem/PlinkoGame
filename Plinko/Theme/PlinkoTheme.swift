@@ -1,10 +1,3 @@
-//
-//  PlinkoTheme.swift
-//  Plinko
-//
-//  Created by Yaroslav Golinskiy on 15/09/2025.
-//
-
 import SwiftUI
 
 extension Color {
@@ -14,11 +7,11 @@ extension Color {
         Scanner(string: hex).scanHexInt64(&int)
         let a, r, g, b: UInt64
         switch hex.count {
-        case 3: // RGB (12-bit)
+        case 3:
             (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6: // RGB (24-bit)
+        case 6:
             (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8: // ARGB (32-bit)
+        case 8:
             (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
         default:
             (a, r, g, b) = (1, 1, 1, 0)
@@ -36,73 +29,60 @@ extension Color {
 
 struct PlinkoTheme {
     struct Palette {
-        // Основні кольори з більшим контрастом (як у Aviator_v2)
-        static let primaryRed = Color(hex: "#FF1744")       // Яскраво-червоний акцент
-        static let darkRed = Color(hex: "#B71C1C")          // Темно-червоний
-        static let deepRed = Color(hex: "#8D0000")           // Глибокий червоний
-        static let black = Color(hex: "#000000")             // Чорний
-        static let darkGray = Color(hex: "#212121")          // Темно-сірий
+        static let primaryRed = Color(hex: "#FF1744")
+        static let darkRed = Color(hex: "#B71C1C")
+        static let deepRed = Color(hex: "#8D0000")
+        static let black = Color(hex: "#000000")
+        static let darkGray = Color(hex: "#212121")
         
-        // Пурпурові градієнти
-        static let deepPurple = Color(hex: "4A148C")       // Темно-пурпуровий
-        static let purple = Color(hex: "7B1FA2")          // Пурпуровий
-        static let lightPurple = Color(hex: "E1BEE7")     // Світло-пурпуровий
-        static let pinkPurple = Color(hex: "C2185B")      // Пурпурово-рожевий
+        static let deepPurple = Color(hex: "4A148C")
+        static let purple = Color(hex: "7B1FA2")
+        static let lightPurple = Color(hex: "E1BEE7")
+        static let pinkPurple = Color(hex: "C2185B")
         
-        // Акцентні кольори
-        static let gold = Color(hex: "FFD700")            // Золотий/жовтий
-        static let green = Color(hex: "4CAF50")          // Зелений
-        static let blue = Color(hex: "2196F3")           // Синій
+        static let gold = Color(hex: "FFD700")
+        static let green = Color(hex: "4CAF50")
+        static let blue = Color(hex: "2196F3")
         
-        // Фонові кольори
-        static let background = Color(hex: "#1A1A1A")        // Темний фон
-        static let surface = Color(hex: "#2A2A2A")           // Темна поверхня
-        static let cardBackground = Color(hex: "#1E1E1E")    // Фон карток
+        static let background = Color(hex: "#1A1A1A")
+        static let surface = Color(hex: "#2A2A2A")
+        static let cardBackground = Color(hex: "#1E1E1E")
         
-        // Текстові кольори
-        static let textPrimary = Color.white                 // Білий текст
-        static let textSecondary = Color(hex: "#CCCCCC")    // Світло-сірий текст
-        static let textTertiary = Color(hex: "#999999")     // Сірий текст
+        static let textPrimary = Color.white
+        static let textSecondary = Color(hex: "#CCCCCC")
+        static let textTertiary = Color(hex: "#999999")
         
-        // Акцентні кольори
-        static let accent = Color(hex: "#FF6B6B")           // Світло-червоний акцент
-        static let success = Color(hex: "#4CAF50")           // Зелений для успіху
-        static let warning = Color(hex: "#FF9800")           // Помаранчевий для попереджень
+        static let accent = Color(hex: "#FF6B6B")
+        static let success = Color(hex: "#4CAF50")
+        static let warning = Color(hex: "#FF9800")
         
-        // MARK: - Plinko Specific Palette (на основі футуристичного дизайну)
-        // Фонові кольори
-        static let backgroundDark = Color(hex: "#0A001A")       // Дуже темний, майже чорний з фіолетовим відтінком
-        static let backgroundAccentPurple = Color(hex: "#300040") // Глибокий фіолетовий для фонових елементів
-        static let backgroundAccentBlue = Color(hex: "#002050") // Темно-синій для фонових елементів
+        static let backgroundDark = Color(hex: "#0A001A")
+        static let backgroundAccentPurple = Color(hex: "#300040")
+        static let backgroundAccentBlue = Color(hex: "#002050")
         
-        // Кольори кульки (футуристична магента)
-        static let spherePrimary = Color(hex: "#E020F0")        // Яскрава магента для кульки
-        static let sphereSecondary = Color(hex: "#700070")      // Темніша магента/пурпур для країв кульки
-        static let sphereHighlight = Color(hex: "#FFFFFF")      // Білий відблиск на кульці
-        static let sphereGlow = Color(hex: "#FF40FF")           // Світіння кульки
+        static let spherePrimary = Color(hex: "#E020F0")
+        static let sphereSecondary = Color(hex: "#700070")
+        static let sphereHighlight = Color(hex: "#FFFFFF")
+        static let sphereGlow = Color(hex: "#FF40FF")
         
-        // Акцентні кольори (неонові свічення)
-        static let electricBlue = Color(hex: "#0080FF")         // Яскравий електричний синій акцент
-        static let glowingPurple = Color(hex: "#A020F0")        // Світліший фіолетовий для свічення
-        static let neonPink = Color(hex: "#FF20A0")             // Неоновий рожевий
-        static let neonCyan = Color(hex: "#00FFFF")             // Неоновий блакитний
+        static let electricBlue = Color(hex: "#0080FF")
+        static let glowingPurple = Color(hex: "#A020F0")
+        static let neonPink = Color(hex: "#FF20A0")
+        static let neonCyan = Color(hex: "#00FFFF")
         
-        // Кольори пінів та інших дрібних елементів
-        static let pinColor = Color(hex: "#FFEEEE")             // Майже білий/світло-рожевий для пінів
-        static let pinGlow = Color(hex: "#FFFFFF")              // Біле світіння пінів
+        static let pinColor = Color(hex: "#FFEEEE")
+        static let pinGlow = Color(hex: "#FFFFFF")
         
-        // Кольори слотів (футуристичні варіанти)
-        static let slotRed = Color(hex: "#FF4081")              // Рожево-червоний
-        static let slotOrange = Color(hex: "#FF9800")           // Помаранчевий
-        static let slotYellow = Color(hex: "#FFEB3B")           // Жовтий
-        static let slotGreen = Color(hex: "#8BC34A")            // Зелений
-        static let slotBlue = Color(hex: "#2196F3")             // Синій
-        static let slotPurple = Color(hex: "#9C27B0")          // Пурпуровий
-        static let slotPink = Color(hex: "#E91E63")            // Рожевий
+        static let slotRed = Color(hex: "#FF4081")
+        static let slotOrange = Color(hex: "#FF9800")
+        static let slotYellow = Color(hex: "#FFEB3B")
+        static let slotGreen = Color(hex: "#8BC34A")
+        static let slotBlue = Color(hex: "#2196F3")
+        static let slotPurple = Color(hex: "#9C27B0")
+        static let slotPink = Color(hex: "#E91E63")
     }
     
     struct Gradient {
-        // Основний градієнт фону з більшим контрастом (як у Aviator_v2)
         static let background = LinearGradient(
             colors: [
                 Palette.primaryRed,
@@ -126,14 +106,12 @@ struct PlinkoTheme {
             endPoint: .bottomTrailing
         )
         
-        // Навігаційні градієнти
         static let navigationBar = LinearGradient(
             colors: [Palette.primaryRed, Palette.deepRed, Palette.darkRed, Palette.primaryRed],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
         
-        // Градієнт для таббару (як у Aviator_v2)
         static let tabBar = LinearGradient(
             colors: [
                 Palette.black,
@@ -145,7 +123,6 @@ struct PlinkoTheme {
             endPoint: .bottomTrailing
         )
         
-        // Кнопки та елементи
         static let button = LinearGradient(
             colors: [Palette.primaryRed, Palette.deepRed],
             startPoint: .topLeading,
@@ -158,7 +135,6 @@ struct PlinkoTheme {
             endPoint: .bottomTrailing
         )
         
-        // Акцентні градієнти
         static let gold = LinearGradient(
             colors: [Palette.gold, Color(hex: "FFA000")],
             startPoint: .topLeading,
@@ -171,8 +147,6 @@ struct PlinkoTheme {
             endPoint: .bottomTrailing
         )
         
-        // MARK: - Plinko Specific Gradients (футуристичний стиль)
-        // Градієнт для фону ігрового поля
         static let gameFieldBackground = LinearGradient(
             colors: [
                 Palette.backgroundDark,
@@ -184,7 +158,6 @@ struct PlinkoTheme {
             endPoint: .bottomTrailing
         )
         
-        // Градієнт для кульки (основний)
         static let sphere = LinearGradient(
             colors: [
                 Palette.sphereHighlight.opacity(0.9),
@@ -195,20 +168,18 @@ struct PlinkoTheme {
             endPoint: .bottomTrailing
         )
         
-        // Радіальний градієнт для кульки (для ефекту глянцю/свічення)
         static let sphereRadialGlow = RadialGradient(
             colors: [
-                Palette.sphereHighlight.opacity(0.8), // Яскравий центр
+                Palette.sphereHighlight.opacity(0.8),
                 Palette.spherePrimary.opacity(0.7),
                 Palette.sphereSecondary.opacity(0.5),
                 Palette.sphereGlow.opacity(0.3)
             ],
-            center: .topLeading, // Відблиск зверху зліва
+            center: .topLeading,
             startRadius: 0,
             endRadius: 50
         )
         
-        // Градієнт для неонових свічень на фоні
         static let electricGlow = LinearGradient(
             colors: [
                 Palette.electricBlue.opacity(0.8),
@@ -220,7 +191,6 @@ struct PlinkoTheme {
             endPoint: .bottomTrailing
         )
         
-        // Градієнт для кнопок або інтерактивних елементів
         static let buttonPrimary = LinearGradient(
             colors: [
                 Palette.spherePrimary,
@@ -231,7 +201,6 @@ struct PlinkoTheme {
             endPoint: .bottomTrailing
         )
         
-        // Градієнт для пінів
         static let pinGlow = RadialGradient(
             colors: [
                 Palette.pinGlow.opacity(0.8),
@@ -243,7 +212,6 @@ struct PlinkoTheme {
             endRadius: 10
         )
         
-        // Градієнт для слотів
         static let slotGradient = LinearGradient(
             colors: [
                 Palette.slotPurple,
@@ -260,17 +228,15 @@ struct PlinkoTheme {
         static let purple = Color(hex: "7B1FA2").opacity(0.3)
         static let gold = Color(hex: "FFD700").opacity(0.3)
         
-        // MARK: - Plinko Specific Shadows
-        static let sphereShadow = Palette.sphereSecondary.opacity(0.6) // Тінь для кульки
-        static let sphereGlow = Palette.sphereGlow.opacity(0.8) // Світіння кульки
-        static let blueGlow = Palette.electricBlue.opacity(0.5) // Світіння для синіх акцентів
-        static let purpleGlow = Palette.glowingPurple.opacity(0.5) // Світіння для фіолетових акцентів
-        static let pinGlow = Palette.pinGlow.opacity(0.7) // Світіння пінів
-        static let neonGlow = Palette.neonCyan.opacity(0.4) // Неонове світіння
+        static let sphereShadow = Palette.sphereSecondary.opacity(0.6)
+        static let sphereGlow = Palette.sphereGlow.opacity(0.8)
+        static let blueGlow = Palette.electricBlue.opacity(0.5)
+        static let purpleGlow = Palette.glowingPurple.opacity(0.5)
+        static let pinGlow = Palette.pinGlow.opacity(0.7)
+        static let neonGlow = Palette.neonCyan.opacity(0.4)
     }
     
     struct Animation {
-        // Анімації для футуристичного ефекту
         static let glowPulse = SwiftUI.Animation.easeInOut(duration: 2.0).repeatForever(autoreverses: true)
         static let fastGlow = SwiftUI.Animation.easeInOut(duration: 0.5).repeatForever(autoreverses: true)
         static let slowRotation = SwiftUI.Animation.linear(duration: 10.0).repeatForever(autoreverses: false)

@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  Plinko
-//
-//  Created by Yaroslav Golinskiy on 15/09/2025.
-//
-//874
 
 import SwiftUI
 
@@ -145,18 +138,15 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Slots View
     private var slotsView: some View {
         ForEach(Array(game.getSlots().enumerated()), id: \.offset) { _, slot in
             VStack(spacing: 2) {
                 ZStack {
-                    // Світіння слота (без блюру)
                     RoundedRectangle(cornerRadius: 6)
                         .fill(PlinkoTheme.Palette.neonPink.opacity(0.7))
                         .frame(width: slot.rect.width + 4, height: slot.rect.height + 4)
                         .opacity(0.7)
                     
-                    // Основний слот
                     RoundedRectangle(cornerRadius: 6)
                         .fill(slot.color)
                         .frame(width: slot.rect.width, height: slot.rect.height)
@@ -176,12 +166,10 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Ball View
     private var ballView: some View {
         Group {
             if let ball = game.ball {
                 ZStack {
-                    // Зовнішнє світіння кульки (рожево-магнетичне)
                     Circle()
                         .fill(
                             RadialGradient(
@@ -199,7 +187,6 @@ struct ContentView: View {
                         .blur(radius: 6)
                         .opacity(0.9)
                     
-                    // Основний круг кульки з рожево-магнетичним градієнтом
                     Circle()
                         .fill(
                             RadialGradient(
@@ -230,7 +217,6 @@ struct ContentView: View {
                                 )
                         )
                     
-                    // Внутрішній блик (білий центр)
                     Circle()
                         .fill(
                             RadialGradient(
@@ -252,7 +238,6 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Celebration View
     private var celebrationView: some View {
         Group {
             if game.showCelebration {
@@ -275,7 +260,6 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Control Buttons View
     private var controlButtonsView: some View {
         HStack(spacing: 15) {
             Button(action: {
@@ -340,10 +324,8 @@ struct ContentView: View {
         .frame(maxWidth: .infinity)
     }
     
-    // MARK: - Settings Screen
     private var settingsScreen: some View {
         VStack(spacing: 20) {
-            // Header
             Text("Settings")
                 .font(.title)
                 .fontWeight(.bold)
@@ -352,9 +334,7 @@ struct ContentView: View {
             
             Spacer()
             
-            // Physics settings
             VStack(spacing: 25) {
-                // Bounce settings
                 VStack(spacing: 12) {
                     Text("Bounce Strength")
                         .font(.title2)
@@ -378,7 +358,6 @@ struct ContentView: View {
                     .accentColor(Color(red: 0.0, green: 0.9, blue: 1.0))
                 }
                 
-                // Gravity settings
                 VStack(spacing: 12) {
                     Text("Gravity Strength")
                         .font(.title2)
@@ -403,7 +382,6 @@ struct ContentView: View {
                 }
             }
                         
-            // Reset All button
             Button(action: {
                 game.showResetAllConfirmation()
             }) {
@@ -429,7 +407,6 @@ struct ContentView: View {
             
             Spacer()
             
-            // Back button
             Button(action: {
                 game.showGame()
             }) {
@@ -464,17 +441,14 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Rating Screen
     private var ratingScreen: some View {
         VStack(spacing: 20) {
-            // Header
             Text("Rating")
                 .font(.title)
                 .fontWeight(.bold)
                 .foregroundColor(PlinkoTheme.Palette.gold)
                 .shadow(color: PlinkoTheme.Shadow.gold, radius: 10)
             
-            // Overall statistics for decision making
             if game.totalScore > 0 || game.totalGames > 0 {
                 VStack(spacing: 15) {
                     Text("Player Statistics")
@@ -535,7 +509,6 @@ struct ContentView: View {
                 }
             }
             
-            // Save result form
             if game.score > 0 {
                 VStack(spacing: 15) {
                     Text("Save Result: \(game.score)")
@@ -578,7 +551,6 @@ struct ContentView: View {
             }
 
             
-            // Results list
             ScrollView {
                 LazyVStack(spacing: 8) {
                     ForEach(Array(game.savedScores.enumerated()), id: \.element.id) { index, score in
@@ -659,7 +631,6 @@ struct ContentView: View {
                 }
             }
             
-            // Кнопка повернення
             Button(action: {
                 game.showGame()
             }) {
@@ -695,7 +666,6 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Stat View Component
 struct StatView: View {
     let title: String
     let value: Int
@@ -716,7 +686,6 @@ struct StatView: View {
     }
 }
 
-// MARK: - Preview
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()

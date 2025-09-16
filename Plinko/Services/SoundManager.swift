@@ -1,14 +1,7 @@
-//
-//  SoundManager.swift
-//  Plinko
-//
-//  Created by Yaroslav Golinskiy on 15/09/2025.
-//
 
 import AVFoundation
 import AudioToolbox
 
-// MARK: - Sound Manager
 class SoundManager {
     static let shared = SoundManager()
     private var audioPlayer: AVAudioPlayer?
@@ -17,8 +10,7 @@ class SoundManager {
     
     func playSound(named soundName: String) {
         guard let url = Bundle.main.url(forResource: soundName, withExtension: "wav") else {
-            // Якщо файл не знайдено, використовуємо системний звук
-            AudioServicesPlaySystemSound(1104) // Звук клацання
+            AudioServicesPlaySystemSound(1104)
             return
         }
         
@@ -26,15 +18,15 @@ class SoundManager {
             audioPlayer = try AVAudioPlayer(contentsOf: url)
             audioPlayer?.play()
         } catch {
-            print("Помилка відтворення звуку: \(error)")
+            print("Error: \(error)")
         }
     }
     
     func playPinHit() {
-        AudioServicesPlaySystemSound(1104) // Звук зіткнення
+        AudioServicesPlaySystemSound(1104)
     }
     
     func playSlotHit() {
-        AudioServicesPlaySystemSound(1105) // Звук попадання
+        AudioServicesPlaySystemSound(1105)
     }
 }
