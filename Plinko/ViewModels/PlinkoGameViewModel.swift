@@ -39,8 +39,9 @@ class PlinkoGameViewModel: ObservableObject {
     @Published var averageScore: Double = 0.0
     @Published var efficiencyCoefficient: Double = 0.0
     
-    // Поп-ап для збереження
+    // Поп-апи
     @Published var showSaveConfirmation: Bool = false
+    @Published var showResetConfirmation: Bool = false
     
     private var pins: [Pin] = []
     private var slots: [Slot] = []
@@ -302,6 +303,29 @@ class PlinkoGameViewModel: ObservableObject {
         resetPlayerStatistics()
         // Зберігаємо скинуту статистику в UserDefaults
         savePlayerStatistics()
+    }
+    
+    func showResetAllConfirmation() {
+        showResetConfirmation = true
+    }
+    
+    func confirmResetAll() {
+        // Скидаємо всю статистику
+        resetPlayerStatistics()
+        
+        // Очищуємо збережені результати
+        savedScores.removeAll()
+        
+        // Зберігаємо все в UserDefaults
+        savePlayerStatistics()
+        saveScoresToUserDefaults()
+        
+        // Закриваємо поп-ап
+        showResetConfirmation = false
+    }
+    
+    func cancelResetAll() {
+        showResetConfirmation = false
     }
     
     func getPins() -> [Pin] { pins }

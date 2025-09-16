@@ -424,10 +424,34 @@ struct ContentView: View {
                     .accentColor(Color(red: 0.0, green: 0.9, blue: 1.0))
                 }
             }
+                        
+            // Reset All button
+            Button(action: {
+                game.showResetAllConfirmation()
+            }) {
+                HStack {
+                    Image(systemName: "trash.circle.fill")
+                    Text("Reset All")
+                }
+                .font(.title3)
+                .frame(maxWidth: .infinity)
+                .fontWeight(.semibold)
+                .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                .padding(.horizontal, 30)
+                .padding(.vertical, 15)
+                .background(PlinkoTheme.Palette.primaryRed)
+                .cornerRadius(15)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(PlinkoTheme.Palette.neonPink, lineWidth: 2)
+                )
+                .shadow(color: PlinkoTheme.Shadow.red, radius: 10)
+            }
+            .padding(.top, 40)
             
             Spacer()
             
-            // Кнопка повернення
+            // Back button
             Button(action: {
                 game.showGame()
             }) {
@@ -450,6 +474,16 @@ struct ContentView: View {
             }
         }
         .padding()
+        .alert("Reset All Data", isPresented: $game.showResetConfirmation) {
+            Button("Cancel", role: .cancel) {
+                game.cancelResetAll()
+            }
+            Button("Reset All", role: .destructive) {
+                game.confirmResetAll()
+            }
+        } message: {
+            Text("This will permanently delete all your statistics and saved results. This action cannot be undone.\n\nDo you want to continue?")
+        }
     }
     
     // MARK: - Rating Screen
