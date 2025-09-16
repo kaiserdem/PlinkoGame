@@ -36,22 +36,34 @@ class PlinkoGameViewModel: ObservableObject {
         // Очищуємо масив пінів
         pins.removeAll()
         
-        // Створюємо піни в шаховому порядку з відсотковими розрахунками
-        let pinSpacing: CGFloat = min(gameWidth / 12, 30)
-        let startY: CGFloat = gameHeight * 0.15 // 15% від висоти ігрового поля
+        // Створюємо піни в шаховому порядку з динамічною відстанню
+        let screenWidth = UIScreen.main.bounds.width
+        let pinSpacing: CGFloat = screenWidth * 0.075 // 5% від ширини екрану
+        let slotYPosition = gameHeight * 0.85 // Позиція слотів
+        let pinY = slotYPosition - 250 // Піни на 300 пікселів вище слотів
         let rows = 8
         
+        print("📌 Pin setup:")
+        print("📌 Screen width: \(screenWidth)")
+        print("📌 Pin spacing (5%): \(pinSpacing)")
+        print("📌 Slot Y: \(slotYPosition)")
+        print("📌 Pin Y: \(pinY)")
+        print("📌 Game width: \(gameWidth)")
+        
         for row in 0..<rows {
-            let y = startY + CGFloat(row) * pinSpacing
+            let y = pinY + CGFloat(row) * pinSpacing
             let pinsInRow = row + 3
             
-            // Центрування рядка з відсотковими розрахунками
+            // Центрування рядка як у слотів
             let totalRowWidth = CGFloat(pinsInRow - 1) * pinSpacing
-            let startX = gameWidth * 0.1 + (gameWidth * 0.8 - totalRowWidth) / 2
+            let startX = (gameWidth - totalRowWidth) / 2 // Центрування по ігровому полю
+            
+            print("📌 Row \(row): pins=\(pinsInRow), y=\(y), startX=\(startX)")
             
             for col in 0..<pinsInRow {
                 let x = startX + CGFloat(col) * pinSpacing
                 pins.append(Pin(position: CGPoint(x: x, y: y)))
+                print("📌 Pin \(row)-\(col): x=\(x), y=\(y)")
             }
         }
         
@@ -59,9 +71,9 @@ class PlinkoGameViewModel: ObservableObject {
         slots.removeAll()
         
         // Створюємо слоти внизу з відсотковими розрахунками
-        let screenWidth = UIScreen.main.bounds.width
+        //let screenWidth = UIScreen.main.bounds.width
         let totalSlotWidth = screenWidth * 0.8 // 80% від ширини екрану
-        let slotSpacing: CGFloat = 5 // Відстань між слотами 1 піксель
+        let slotSpacing: CGFloat = 5 // Відстань між слотами 5 пікселів
         let slotWidth = (totalSlotWidth - CGFloat(9) * slotSpacing) / 10 // Ширина одного слота з урахуванням відступів
         let slotHeight: CGFloat = min(gameHeight * 0.08, 30) // 8% від висоти
         let slotY = gameHeight * 0.85 // 85% від висоти ігрового поля (15% відступ від низу)
