@@ -49,19 +49,36 @@ class PlinkoGameViewModel: ObservableObject {
         // Створюємо піни в шаховому порядку з динамічною відстанню
         // Використовуємо той же підхід центрування що і для слотів (відносно екрану)
         let screenWidth = UIScreen.main.bounds.width
+        let screenHeight = UIScreen.main.bounds.height
         let pinSpacing: CGFloat = screenWidth * 0.075 // 7.5% від ширини екрану (як оригінально)
         let slotYPosition = gameHeight * 0.70 // Позиція слотів
-        let pinY = slotYPosition - 230 // Піни на 240 пікселів вище слотів
+        
+        // Адаптивна відстань між пінами та слотами залежно від висоти екрану
+        let pinOffset: CGFloat
+        switch screenHeight {
+        case 667...700:    // iPhone SE та подібні
+            pinOffset = 180
+        case 700...900:    // iPhone стандартні розміри
+            pinOffset = 220
+        case 900...1000:   // iPhone Plus/Max та iPad
+            pinOffset = 230
+        default:           // За замовчуванням для невідомих розмірів
+            pinOffset = 220
+        }
+        
+        let pinY = slotYPosition - pinOffset
         let rows = 8
         
         print("📌 Pin setup:")
         print("📌 Screen width: \(screenWidth)")
+        print("📌 Screen height: \(screenHeight)")
         print("📌 Game width: \(gameWidth)")
         print("📌 Game height: \(gameHeight)")
         print("📌 Pin spacing (7.5%): \(pinSpacing)")
         print("📌 Pin radius: \(screenWidth * 0.01)")
         print("📌 Ball radius: \(screenWidth * 0.015)")
         print("📌 Slot Y: \(slotYPosition)")
+        print("📌 Pin offset: \(pinOffset)")
         print("📌 Pin Y: \(pinY)")
         
         for row in 0..<rows {
@@ -119,10 +136,11 @@ class PlinkoGameViewModel: ObservableObject {
         collisionCount = 0
         gameStartTime = Date()
         
-        // Початкова позиція кульки по центру ігрового поля з меншою вертикальною швидкістю
+        // Початкова позиція кульки по центру екрану з правильною швидкістю
+        let screenWidth = UIScreen.main.bounds.width
         ball = Ball(
-            position: CGPoint(x: gameWidth / 2, y: 30),
-            velocity: CGVector(dx: Double.random(in: -2...2), dy: Double.random(in: 0.5...1.5))
+            position: CGPoint(x: screenWidth / 2, y: 30),
+            velocity: CGVector(dx: Double.random(in: -0.5...0.5), dy: Double.random(in: 1.0...2.0))
         )
         
         startGameLoop()
