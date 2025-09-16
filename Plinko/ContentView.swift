@@ -12,18 +12,41 @@ struct ContentView: View {
     @StateObject private var game = PlinkoGameViewModel()
     
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                // Футуристичний фон на весь екран
-                PlinkoTheme.Gradient.gameFieldBackground
-                    .ignoresSafeArea()
+        ZStack {
+            // Футуристичний фон на весь екран
+            PlinkoTheme.Gradient.gameFieldBackground
+                .ignoresSafeArea()
+            
+            VStack(spacing: 10) {
+                gameTitleView
                 
-                VStack(spacing: 10) {
-                    gameTitleView
-                    gameStatsView
-                    gameFieldView(geometry: geometry)
-                    controlButtonsView
-                }
+                Spacer()
+                
+                gameStatsView
+                
+                Spacer()
+                
+                gameFieldView
+                
+                Spacer()
+                
+                controlButtonsView
+            }
+        }
+        .onAppear {
+            // Отримуємо розміри екрану
+            let screenBounds = UIScreen.main.bounds
+            let screenWidth = screenBounds.width
+            let screenHeight = screenBounds.height
+            
+            print("📱 Screen bounds: \(screenBounds)")
+            print("📱 Screen width: \(screenWidth)")
+            print("📱 Screen height: \(screenHeight)")
+            print("📱 Screen scale: \(UIScreen.main.scale)")
+            
+            // Також спробуємо через window
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                print("📱 Window size: \(windowScene.screen.bounds)")
             }
         }
     }
@@ -46,10 +69,11 @@ struct ContentView: View {
             StatView(title: "Games", value: game.totalGames, color: PlinkoTheme.Palette.neonPink, shadow: PlinkoTheme.Shadow.neonGlow)
         }
         .padding(.horizontal)
+        .frame(maxWidth: .infinity)
     }
     
     // MARK: - Game Field View
-    private func gameFieldView(geometry: GeometryProxy) -> some View {
+    private var gameFieldView: some View {
         ZStack {
             // Ігрове поле з футуристичним фоном
             RoundedRectangle(cornerRadius: 15)
@@ -59,25 +83,14 @@ struct ContentView: View {
                         .stroke(PlinkoTheme.Gradient.electricGlow, lineWidth: 2)
                 )
                 .shadow(color: PlinkoTheme.Shadow.purpleGlow, radius: 20)
-                .frame(width: game.gameWidth, height: game.gameHeight)
-                .onAppear {
-                    // Оновлюємо розміри гри при з'явленні
-                    let availableWidth = geometry.size.width - 20
-                    let availableHeight = geometry.size.height - 200 // Мінус місце для заголовка, статистики та кнопок
-                    game.updateGameSize(width: availableWidth, height: availableHeight)
-                }
-                .onChange(of: geometry.size) { _ in
-                    // Оновлюємо розміри при зміні орієнтації або розміру екрану
-                    let availableWidth = geometry.size.width - 20
-                    let availableHeight = geometry.size.height - 200
-                    game.updateGameSize(width: availableWidth, height: availableHeight)
-                }
+                .frame(width: UIScreen.main.bounds.width - 40, height: UIScreen.main.bounds.height - 300) // Динамічні розміри з відступами
             
-            pinsView
-            slotsView
+            pinsView  // точки
+            slotsView // кольора
             ballView
             celebrationView
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     // MARK: - Pins View
@@ -247,6 +260,7 @@ struct ContentView: View {
         }
         .padding(.horizontal)
         .padding(.bottom, 10)
+        .frame(maxWidth: .infinity)
     }
 }
 
