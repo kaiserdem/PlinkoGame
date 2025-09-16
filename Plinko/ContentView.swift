@@ -8,17 +8,14 @@
 
 import SwiftUI
 
-// MARK: - Main View
 struct ContentView: View {
     @StateObject private var game = PlinkoGameViewModel()
     
     var body: some View {
         ZStack {
-            // Футуристичний фон на весь екран
             PlinkoTheme.Gradient.gameFieldBackground
                 .ignoresSafeArea()
             
-            // Відображаємо різні екрани залежно від поточного стану
             switch game.currentScreen {
             case .game:
                 VStack(spacing: 10) {
@@ -43,24 +40,15 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            // Отримуємо розміри екрану
             let screenBounds = UIScreen.main.bounds
             let screenWidth = screenBounds.width
             let screenHeight = screenBounds.height
             
-            print("📱 Screen bounds: \(screenBounds)")
-            print("📱 Screen width: \(screenWidth)")
-            print("📱 Screen height: \(screenHeight)")
-            print("📱 Screen scale: \(UIScreen.main.scale)")
-            
-            // Також спробуємо через window
             if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-                print("📱 Window size: \(windowScene.screen.bounds)")
             }
         }
     }
     
-    // MARK: - Game Title View
     private var gameTitleView: some View {
         Text("Plinko Game")
             .font(.title)
@@ -70,11 +58,8 @@ struct ContentView: View {
             .padding(.top, 10)
     }
     
-    // MARK: - Game Stats View
-    // MARK: - Game Stats with Navigation View
     private var gameStatsWithNavigationView: some View {
         HStack(spacing: 15) {
-            // Кругла кнопка рейтингу (зліва)
             Button(action: {
                 game.showRating()
             }) {
@@ -93,7 +78,6 @@ struct ContentView: View {
                     .shadow(color: PlinkoTheme.Shadow.gold, radius: 8)
             }
             
-            // Статистика гри
             HStack(spacing: 15) {
                 StatView(title: "Score", value: game.score, color: PlinkoTheme.Palette.electricBlue, shadow: PlinkoTheme.Shadow.blueGlow)
                 StatView(title: "Total", value: game.totalScore, color: PlinkoTheme.Palette.spherePrimary, shadow: PlinkoTheme.Shadow.sphereGlow)
@@ -102,7 +86,6 @@ struct ContentView: View {
             }
             .frame(maxWidth: .infinity)
             
-            // Кругла кнопка налаштувань (справа)
             Button(action: {
                 game.showSettings()
             }) {
@@ -124,10 +107,8 @@ struct ContentView: View {
         .padding(.horizontal)
     }
     
-    // MARK: - Game Field View
     private var gameFieldView: some View {
         ZStack {
-            // Ігрове поле з футуристичним фоном
             RoundedRectangle(cornerRadius: 15)
                 .fill(PlinkoTheme.Palette.backgroundDark.opacity(0.8))
                 .overlay(
@@ -139,25 +120,22 @@ struct ContentView: View {
                 .padding(.horizontal, 20)
                 .padding(.vertical, 30)
             
-            pinsView  // точки
-            slotsView // кольора
+            pinsView
+            slotsView
             ballView
             celebrationView
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
-    // MARK: - Pins View
     private var pinsView: some View {
         ForEach(Array(game.getPins().enumerated()), id: \.offset) { _, pin in
             ZStack {
-                // Світіння піна (без блюру)
                 Circle()
                     .fill(PlinkoTheme.Palette.pinGlow)
                     .frame(width: pin.radius * 3, height: pin.radius * 3)
                     .opacity(0.6)
                 
-                // Основний пін
                 Circle()
                     .fill(PlinkoTheme.Gradient.pinGlow)
                     .frame(width: pin.radius * 2, height: pin.radius * 2)
