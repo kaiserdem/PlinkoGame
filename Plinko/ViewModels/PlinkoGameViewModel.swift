@@ -61,10 +61,10 @@ class PlinkoGameViewModel: ObservableObject {
         // Створюємо слоти внизу з відсотковими розрахунками
         let screenWidth = UIScreen.main.bounds.width
         let totalSlotWidth = screenWidth * 0.8 // 80% від ширини екрану
-        let slotWidth = totalSlotWidth / 10 // Ширина одного слота (10 слотів)
-        let slotHeight: CGFloat = min(gameHeight * 0.08, 40) // 8% від висоти
-        let slotY = gameHeight * 0.85 // 80% від висоти ігрового поля (20% відступ від низу)
-        let slotSpacing: CGFloat = 2 // Без відступів між слотами
+        let slotSpacing: CGFloat = 5 // Відстань між слотами 1 піксель
+        let slotWidth = (totalSlotWidth - CGFloat(9) * slotSpacing) / 10 // Ширина одного слота з урахуванням відступів
+        let slotHeight: CGFloat = min(gameHeight * 0.08, 30) // 8% від висоти
+        let slotY = gameHeight * 0.85 // 85% від висоти ігрового поля (15% відступ від низу)
         let startSlotX = (screenWidth - totalSlotWidth) / 2 // Центрування по екрану
         
         print("📱 Screen width: \(screenWidth)")
@@ -77,10 +77,10 @@ class PlinkoGameViewModel: ObservableObject {
         let slotColors: [Color] = [.red, .orange, .yellow, .green, .blue, .blue, .green, .yellow, .orange, .red]
         
         for i in 0..<10 {
-            let x = startSlotX + CGFloat(i) * slotWidth
+            let x = startSlotX + CGFloat(i) * (slotWidth + slotSpacing)
             let rect = CGRect(x: x, y: slotY, width: slotWidth, height: slotHeight)
             slots.append(Slot(rect: rect, points: slotPoints[i], color: slotColors[i]))
-            print("📐 Slot \(i): x=\(x), width=\(slotWidth), rect=\(rect)")
+            print("📐 Slot \(i): x=\(x), width=\(slotWidth), spacing=\(slotSpacing), rect=\(rect)")
         }
     }
     
