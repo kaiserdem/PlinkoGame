@@ -9,9 +9,9 @@ import SwiftUI
 import Combine
 
 /*
- Screen height: 957 тоді  let pinY = slotYPosition - 240 //
+ Screen height: 957 тоді  let pinY = slotYPosition - 230 //
  Screen height: 874 тоді  let pinY = slotYPosition - 220 //
- Screen height: 667  тоді  let pinY = slotYPosition - 200 //
+ Screen height: 667  тоді  let pinY = slotYPosition - 180 //
 */
 
 // MARK: - Game State
@@ -50,8 +50,8 @@ class PlinkoGameViewModel: ObservableObject {
         // Використовуємо той же підхід центрування що і для слотів (відносно екрану)
         let screenWidth = UIScreen.main.bounds.width
         let pinSpacing: CGFloat = screenWidth * 0.075 // 7.5% від ширини екрану (як оригінально)
-        let slotYPosition = gameHeight * 0.85 // Позиція слотів
-        let pinY = slotYPosition - 240 // Піни на 240 пікселів вище слотів
+        let slotYPosition = gameHeight * 0.70 // Позиція слотів
+        let pinY = slotYPosition - 230 // Піни на 240 пікселів вище слотів
         let rows = 8
         
         print("📌 Pin setup:")
@@ -89,7 +89,7 @@ class PlinkoGameViewModel: ObservableObject {
         let slotSpacing: CGFloat = 5 // Відстань між слотами 5 пікселів
         let slotWidth = (totalSlotWidth - CGFloat(9) * slotSpacing) / 10 // Ширина одного слота з урахуванням відступів
         let slotHeight: CGFloat = min(gameHeight * 0.08, 30) // 8% від висоти ігрового поля
-        let slotY = gameHeight * 0.85 // 85% від висоти ігрового поля (15% відступ від низу)
+        let slotY = gameHeight * 0.75 // 80% від висоти ігрового поля (20% відступ від низу)
         let startSlotX = (screenWidth - totalSlotWidth) / 2 // Центрування по екрану
         
         print("📐 Screen width: \(screenWidth)")

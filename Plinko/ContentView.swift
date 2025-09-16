@@ -86,7 +86,7 @@ struct ContentView: View {
                 .shadow(color: PlinkoTheme.Shadow.purpleGlow, radius: 20)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.horizontal, 20)
-                .padding(.vertical, 50)
+                .padding(.vertical, 30)
             
             pinsView  // точки
             slotsView // кольора
