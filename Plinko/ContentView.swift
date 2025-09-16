@@ -4,6 +4,7 @@
 //
 //  Created by Yaroslav Golinskiy on 15/09/2025.
 //
+//874
 
 import SwiftUI
 
@@ -83,7 +84,9 @@ struct ContentView: View {
                         .stroke(PlinkoTheme.Gradient.electricGlow, lineWidth: 2)
                 )
                 .shadow(color: PlinkoTheme.Shadow.purpleGlow, radius: 20)
-                .frame(width: UIScreen.main.bounds.width - 40, height: UIScreen.main.bounds.height - 300) // Динамічні розміри з відступами
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 50)
             
             pinsView  // точки
             slotsView // кольора

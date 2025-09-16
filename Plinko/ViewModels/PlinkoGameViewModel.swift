@@ -8,6 +8,12 @@
 import SwiftUI
 import Combine
 
+/*
+ Screen height: 957 тоді  let pinY = slotYPosition - 240 //
+ Screen height: 874 тоді  let pinY = slotYPosition - 220 //
+ Screen height: 667  тоді  let pinY = slotYPosition - 200 //
+*/
+
 // MARK: - Game State
 class PlinkoGameViewModel: ObservableObject {
     @Published var ball: Ball?
@@ -25,8 +31,12 @@ class PlinkoGameViewModel: ObservableObject {
     private var lastPosition: CGPoint = .zero
     private var gameStartTime: Date = Date()
     
-    var gameWidth: CGFloat = UIScreen.main.bounds.width - 40
-    var gameHeight: CGFloat = UIScreen.main.bounds.height - 300
+    var gameWidth: CGFloat {
+        UIScreen.main.bounds.width - 40 // Горизонтальні відступи
+    }
+    var gameHeight: CGFloat {
+        UIScreen.main.bounds.height - 300 // Вертикальні відступи для заголовка, статистики та кнопок
+    }
     
     init() {
         setupGame()
@@ -37,28 +47,30 @@ class PlinkoGameViewModel: ObservableObject {
         pins.removeAll()
         
         // Створюємо піни в шаховому порядку з динамічною відстанню
+        // Використовуємо той же підхід центрування що і для слотів (відносно екрану)
         let screenWidth = UIScreen.main.bounds.width
-        let pinSpacing: CGFloat = screenWidth * 0.075 // 7.5% від ширини екрану
+        let pinSpacing: CGFloat = screenWidth * 0.075 // 7.5% від ширини екрану (як оригінально)
         let slotYPosition = gameHeight * 0.85 // Позиція слотів
-        let pinY = slotYPosition - 210 // Піни на 300 пікселів вище слотів
+        let pinY = slotYPosition - 240 // Піни на 240 пікселів вище слотів
         let rows = 8
         
         print("📌 Pin setup:")
         print("📌 Screen width: \(screenWidth)")
+        print("📌 Game width: \(gameWidth)")
+        print("📌 Game height: \(gameHeight)")
         print("📌 Pin spacing (7.5%): \(pinSpacing)")
-        print("📌 Pin radius (1%): \(screenWidth * 0.01)")
-        print("📌 Ball radius (1.5%): \(screenWidth * 0.015)")
+        print("📌 Pin radius: \(screenWidth * 0.01)")
+        print("📌 Ball radius: \(screenWidth * 0.015)")
         print("📌 Slot Y: \(slotYPosition)")
         print("📌 Pin Y: \(pinY)")
-        print("📌 Game width: \(gameWidth)")
         
         for row in 0..<rows {
             let y = pinY + CGFloat(row) * pinSpacing
             let pinsInRow = row + 3
             
-            // Центрування рядка як у слотів
+            // Центрування рядка відносно екрану (як оригінально для слотів)
             let totalRowWidth = CGFloat(pinsInRow - 1) * pinSpacing
-            let startX = (gameWidth - totalRowWidth) / 2 // Центрування по ігровому полю
+            let startX = (screenWidth - totalRowWidth) / 2 // Центрування по екрану
             
             print("📌 Row \(row): pins=\(pinsInRow), y=\(y), startX=\(startX)")
             
@@ -72,16 +84,16 @@ class PlinkoGameViewModel: ObservableObject {
         // Очищуємо масив слотів
         slots.removeAll()
         
-        // Створюємо слоти внизу з відсотковими розрахунками
-        //let screenWidth = UIScreen.main.bounds.width
+        // Створюємо слоти внизу з відсотковими розрахунками відносно екрану (оригінальний підхід)
         let totalSlotWidth = screenWidth * 0.8 // 80% від ширини екрану
         let slotSpacing: CGFloat = 5 // Відстань між слотами 5 пікселів
         let slotWidth = (totalSlotWidth - CGFloat(9) * slotSpacing) / 10 // Ширина одного слота з урахуванням відступів
-        let slotHeight: CGFloat = min(gameHeight * 0.08, 30) // 8% від висоти
+        let slotHeight: CGFloat = min(gameHeight * 0.08, 30) // 8% від висоти ігрового поля
         let slotY = gameHeight * 0.85 // 85% від висоти ігрового поля (15% відступ від низу)
         let startSlotX = (screenWidth - totalSlotWidth) / 2 // Центрування по екрану
         
-        print("📱 Screen width: \(screenWidth)")
+        print("📐 Screen width: \(screenWidth)")
+        print("📐 Game width: \(gameWidth)")
         print("📐 Total slot width (80%): \(totalSlotWidth)")
         print("📐 Individual slot width: \(slotWidth)")
         print("📐 Start slot X (centered): \(startSlotX)")
@@ -107,9 +119,9 @@ class PlinkoGameViewModel: ObservableObject {
         collisionCount = 0
         gameStartTime = Date()
         
-        // Початкова позиція кульки з меншою вертикальною швидкістю (гравітація прискорить)
+        // Початкова позиція кульки по центру ігрового поля з меншою вертикальною швидкістю
         ball = Ball(
-            position: CGPoint(x: gameWidth / 2, y: 20),
+            position: CGPoint(x: gameWidth / 2, y: 30),
             velocity: CGVector(dx: Double.random(in: -2...2), dy: Double.random(in: 0.5...1.5))
         )
         

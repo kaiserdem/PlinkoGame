@@ -17,7 +17,7 @@ struct Ball {
     init(position: CGPoint, velocity: CGVector, radius: CGFloat? = nil) {
         self.position = position
         self.velocity = velocity
-        // Якщо radius не задано, розраховуємо на основі ширини екрану
+        // Якщо radius не задано, розраховуємо на основі ширини екрану (оригінальний підхід)
         if let radius = radius {
             self.radius = radius
         } else {
@@ -34,7 +34,7 @@ struct Pin {
     
     init(position: CGPoint, radius: CGFloat? = nil) {
         self.position = position
-        // Якщо radius не задано, розраховуємо на основі ширини екрану
+        // Якщо radius не задано, розраховуємо на основі ширини екрану (оригінальний підхід)
         if let radius = radius {
             self.radius = radius
         } else {
