@@ -97,11 +97,10 @@ struct ContentView: View {
     private var pinsView: some View {
         ForEach(Array(game.getPins().enumerated()), id: \.offset) { _, pin in
             ZStack {
-                // Світіння піна
+                // Світіння піна (без блюру)
                 Circle()
                     .fill(PlinkoTheme.Palette.pinGlow)
                     .frame(width: pin.radius * 3, height: pin.radius * 3)
-                    .blur(radius: 3)
                     .opacity(0.6)
                 
                 // Основний пін
@@ -119,11 +118,10 @@ struct ContentView: View {
         ForEach(Array(game.getSlots().enumerated()), id: \.offset) { _, slot in
             VStack(spacing: 2) {
                 ZStack {
-                    // Світіння слота
+                    // Світіння слота (без блюру)
                     RoundedRectangle(cornerRadius: 6)
                         .fill(PlinkoTheme.Palette.neonPink.opacity(0.7))
                         .frame(width: slot.rect.width + 4, height: slot.rect.height + 4)
-                        .blur(radius: 2)
                         .opacity(0.7)
                     
                     // Основний слот
@@ -151,26 +149,73 @@ struct ContentView: View {
         Group {
             if let ball = game.ball {
                 ZStack {
-                    // Зовнішнє світіння кульки
+                    // Зовнішнє світіння кульки (рожево-магнетичне)
                     Circle()
-                        .fill(PlinkoTheme.Palette.sphereGlow)
+                        .fill(
+                            RadialGradient(
+                                gradient: Gradient(colors: [
+                                    Color.pink.opacity(0.8),
+                                    Color.purple.opacity(0.6),
+                                    Color.purple.opacity(0.4)
+                                ]),
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: ball.radius * 2
+                            )
+                        )
                         .frame(width: ball.radius * 4, height: ball.radius * 4)
-                        .blur(radius: 8)
-                        .opacity(0.8)
+                        .blur(radius: 6)
+                        .opacity(0.9)
                     
-                    // Радіальний градієнт кульки
+                    // Основний круг кульки з рожево-магнетичним градієнтом
                     Circle()
-                        .fill(PlinkoTheme.Gradient.sphereRadialGlow)
+                        .fill(
+                            RadialGradient(
+                                gradient: Gradient(colors: [
+                                    Color.white.opacity(0.9),
+                                    Color.pink.opacity(0.8),
+                                    Color.purple.opacity(0.7),
+                                    Color.purple.opacity(0.9)
+                                ]),
+                                center: .topLeading,
+                                startRadius: 0,
+                                endRadius: ball.radius
+                            )
+                        )
                         .frame(width: ball.radius * 2, height: ball.radius * 2)
+                        .overlay(
+                            Circle()
+                                .stroke(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [
+                                            Color.pink.opacity(0.8),
+                                            Color.purple.opacity(0.6)
+                                        ]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 2
+                                )
+                        )
                     
-                    // Внутрішнє світіння
+                    // Внутрішній блик (білий центр)
                     Circle()
-                        .fill(PlinkoTheme.Palette.sphereHighlight.opacity(0.3))
-                        .frame(width: ball.radius, height: ball.radius)
-                        .blur(radius: 2)
+                        .fill(
+                            RadialGradient(
+                                gradient: Gradient(colors: [
+                                    Color.white.opacity(0.8),
+                                    Color.pink.opacity(0.3),
+                                    Color.clear
+                                ]),
+                                center: .topLeading,
+                                startRadius: 0,
+                                endRadius: ball.radius * 0.6
+                            )
+                        )
+                        .frame(width: ball.radius * 1.2, height: ball.radius * 1.2)
                 }
                 .position(ball.position)
-                .shadow(color: PlinkoTheme.Shadow.sphereGlow, radius: 15)
+                .shadow(color: Color.pink.opacity(0.6), radius: 8)
             }
         }
     }

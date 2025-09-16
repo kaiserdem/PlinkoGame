@@ -38,14 +38,16 @@ class PlinkoGameViewModel: ObservableObject {
         
         // Створюємо піни в шаховому порядку з динамічною відстанню
         let screenWidth = UIScreen.main.bounds.width
-        let pinSpacing: CGFloat = screenWidth * 0.075 // 5% від ширини екрану
+        let pinSpacing: CGFloat = screenWidth * 0.075 // 7.5% від ширини екрану
         let slotYPosition = gameHeight * 0.85 // Позиція слотів
-        let pinY = slotYPosition - 250 // Піни на 300 пікселів вище слотів
+        let pinY = slotYPosition - 210 // Піни на 300 пікселів вище слотів
         let rows = 8
         
         print("📌 Pin setup:")
         print("📌 Screen width: \(screenWidth)")
-        print("📌 Pin spacing (5%): \(pinSpacing)")
+        print("📌 Pin spacing (7.5%): \(pinSpacing)")
+        print("📌 Pin radius (1%): \(screenWidth * 0.01)")
+        print("📌 Ball radius (1.5%): \(screenWidth * 0.015)")
         print("📌 Slot Y: \(slotYPosition)")
         print("📌 Pin Y: \(pinY)")
         print("📌 Game width: \(gameWidth)")
