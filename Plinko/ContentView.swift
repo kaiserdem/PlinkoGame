@@ -18,20 +18,28 @@ struct ContentView: View {
             PlinkoTheme.Gradient.gameFieldBackground
                 .ignoresSafeArea()
             
-            VStack(spacing: 10) {
-                gameTitleView
-                
-                Spacer()
-                
-                gameStatsView
-                
-                Spacer()
-                
-                gameFieldView
-                
-                Spacer()
-                
-                controlButtonsView
+            // Відображаємо різні екрани залежно від поточного стану
+            switch game.currentScreen {
+            case .game:
+                VStack(spacing: 10) {
+                    gameTitleView
+                    
+                    Spacer()
+                    
+                    gameStatsWithNavigationView
+                    
+                    Spacer()
+                    
+                    gameFieldView
+                    
+                    Spacer()
+                    
+                    controlButtonsView
+                }
+            case .settings:
+                settingsScreen
+            case .rating:
+                ratingScreen
             }
         }
         .onAppear {
@@ -63,14 +71,57 @@ struct ContentView: View {
     }
     
     // MARK: - Game Stats View
-    private var gameStatsView: some View {
-        HStack(spacing: 20) {
-            StatView(title: "Score", value: game.score, color: PlinkoTheme.Palette.electricBlue, shadow: PlinkoTheme.Shadow.blueGlow)
-            StatView(title: "Best", value: game.bestScore, color: PlinkoTheme.Palette.gold, shadow: PlinkoTheme.Shadow.gold)
-            StatView(title: "Games", value: game.totalGames, color: PlinkoTheme.Palette.neonPink, shadow: PlinkoTheme.Shadow.neonGlow)
+    // MARK: - Game Stats with Navigation View
+    private var gameStatsWithNavigationView: some View {
+        HStack(spacing: 15) {
+            // Кругла кнопка рейтингу (зліва)
+            Button(action: {
+                game.showRating()
+            }) {
+                Image(systemName: "star.fill")
+                    .font(.title2)
+                    .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                    .frame(width: 50, height: 50)
+                    .background(
+                        Circle()
+                            .fill(PlinkoTheme.Palette.gold)
+                            .overlay(
+                                Circle()
+                                    .stroke(PlinkoTheme.Palette.neonPink, lineWidth: 2)
+                            )
+                    )
+                    .shadow(color: PlinkoTheme.Shadow.gold, radius: 8)
+            }
+            
+            // Статистика гри
+            HStack(spacing: 15) {
+                StatView(title: "Score", value: game.score, color: PlinkoTheme.Palette.electricBlue, shadow: PlinkoTheme.Shadow.blueGlow)
+                StatView(title: "Total", value: game.totalScore, color: PlinkoTheme.Palette.spherePrimary, shadow: PlinkoTheme.Shadow.sphereGlow)
+                StatView(title: "Best", value: game.bestScore, color: PlinkoTheme.Palette.gold, shadow: PlinkoTheme.Shadow.gold)
+                StatView(title: "Games", value: game.totalGames, color: PlinkoTheme.Palette.neonPink, shadow: PlinkoTheme.Shadow.neonGlow)
+            }
+            .frame(maxWidth: .infinity)
+            
+            // Кругла кнопка налаштувань (справа)
+            Button(action: {
+                game.showSettings()
+            }) {
+                Image(systemName: "gearshape.fill")
+                    .font(.title2)
+                    .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                    .frame(width: 50, height: 50)
+                    .background(
+                        Circle()
+                            .fill(PlinkoTheme.Palette.electricBlue)
+                            .overlay(
+                                Circle()
+                                    .stroke(PlinkoTheme.Palette.spherePrimary, lineWidth: 2)
+                            )
+                    )
+                    .shadow(color: PlinkoTheme.Shadow.blueGlow, radius: 8)
+            }
         }
         .padding(.horizontal)
-        .frame(maxWidth: .infinity)
     }
     
     // MARK: - Game Field View
@@ -309,6 +360,326 @@ struct ContentView: View {
         .padding(.horizontal)
         .padding(.bottom, 10)
         .frame(maxWidth: .infinity)
+    }
+    
+    // MARK: - Settings Screen
+    private var settingsScreen: some View {
+        VStack(spacing: 20) {
+            // Header
+            Text("Settings")
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(PlinkoTheme.Palette.spherePrimary)
+                .shadow(color: PlinkoTheme.Shadow.sphereGlow, radius: 10)
+            
+            Spacer()
+            
+            // Physics settings
+            VStack(spacing: 25) {
+                // Bounce settings
+                VStack(spacing: 12) {
+                    Text("Bounce Strength")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(Color(red: 0.0, green: 0.9, blue: 1.0))
+                    
+                    Picker("Bounce Strength", selection: $game.bounceStrength) {
+                        ForEach(BounceStrength.allCases, id: \.self) { strength in
+                            Text(strength.rawValue).tag(strength)
+                        }
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.white)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.blue, lineWidth: 2)
+                            )
+                    )
+                    .accentColor(Color(red: 0.0, green: 0.9, blue: 1.0))
+                }
+                
+                // Gravity settings
+                VStack(spacing: 12) {
+                    Text("Gravity Strength")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(Color(red: 0.0, green: 0.9, blue: 1.0))
+                    
+                    Picker("Gravity Strength", selection: $game.gravityStrength) {
+                        ForEach(GravityStrength.allCases, id: \.self) { strength in
+                            Text(strength.rawValue).tag(strength)
+                        }
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.white)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.blue, lineWidth: 2)
+                            )
+                    )
+                    .accentColor(Color(red: 0.0, green: 0.9, blue: 1.0))
+                }
+            }
+            
+            Spacer()
+            
+            // Кнопка повернення
+            Button(action: {
+                game.showGame()
+            }) {
+                HStack {
+                    Image(systemName: "arrow.left.circle.fill")
+                    Text("Back to Game")
+                }
+                .font(.title3)
+                .fontWeight(.semibold)
+                .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                .padding(.horizontal, 30)
+                .padding(.vertical, 15)
+                .background(PlinkoTheme.Gradient.buttonPrimary)
+                .cornerRadius(15)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(PlinkoTheme.Palette.spherePrimary, lineWidth: 2)
+                )
+                .shadow(color: PlinkoTheme.Shadow.sphereShadow, radius: 10)
+            }
+        }
+        .padding()
+    }
+    
+    // MARK: - Rating Screen
+    private var ratingScreen: some View {
+        VStack(spacing: 20) {
+            // Header
+            Text("Rating")
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(PlinkoTheme.Palette.gold)
+                .shadow(color: PlinkoTheme.Shadow.gold, radius: 10)
+            
+            // Overall statistics for decision making
+            if game.totalScore > 0 || game.totalGames > 0 {
+                VStack(spacing: 15) {
+                    Text("Player Statistics")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(PlinkoTheme.Palette.gold)
+                
+                HStack(spacing: 15) {
+                    VStack {
+                        Text("Total")
+                            .font(.caption)
+                            .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                        Text("\(game.totalScore)")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(PlinkoTheme.Palette.electricBlue)
+                    }
+                    
+                    VStack {
+                        Text("Best")
+                            .font(.caption)
+                            .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                        Text("\(game.bestScore)")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(PlinkoTheme.Palette.gold)
+                    }
+                    
+                    VStack {
+                        Text("Games")
+                            .font(.caption)
+                            .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                        Text("\(game.totalGames)")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(PlinkoTheme.Palette.neonPink)
+                    }
+                    
+                    VStack {
+                        Text("Efficiency")
+                            .font(.caption)
+                            .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                        Text(String(format: "%.1f", game.efficiencyCoefficient))
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(PlinkoTheme.Palette.spherePrimary)
+                    }
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(PlinkoTheme.Palette.backgroundDark.opacity(0.8))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(PlinkoTheme.Palette.gold.opacity(0.5), lineWidth: 2)
+                        )
+                )
+                }
+            }
+            
+            // Save result form
+            if game.score > 0 {
+                VStack(spacing: 15) {
+                    Text("Save Result: \(game.score)")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                    
+                    TextField("Enter your name", text: $game.playerName)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding(.horizontal)
+                    
+                    Button(action: {
+                        game.saveScore()
+                    }) {
+                        Text("Save Score")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
+                            .background(PlinkoTheme.Palette.gold)
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(PlinkoTheme.Palette.neonPink, lineWidth: 2)
+                            )
+                            .shadow(color: PlinkoTheme.Shadow.gold, radius: 8)
+                    }
+                    .disabled(game.playerName.isEmpty)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 15)
+                        .fill(PlinkoTheme.Palette.backgroundDark.opacity(0.8))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 15)
+                                .stroke(PlinkoTheme.Palette.gold.opacity(0.5), lineWidth: 2)
+                        )
+                )
+            }
+
+            
+            // Results list
+            ScrollView {
+                LazyVStack(spacing: 8) {
+                    ForEach(Array(game.savedScores.enumerated()), id: \.element.id) { index, score in
+                        VStack(spacing: 8) {
+                            HStack {
+                                Text("\(index + 1).")
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(PlinkoTheme.Palette.gold)
+                                    .frame(width: 30, alignment: .leading)
+                                
+                                Text(score.name)
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                                
+                                Spacer()
+                                
+                                Text("Efficiency: \(String(format: "%.1f", score.efficiencyCoefficient))")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(PlinkoTheme.Palette.spherePrimary)
+                            }
+                            
+                            HStack(spacing: 20) {
+                                VStack {
+                                    Text("Score")
+                                        .font(.caption2)
+                                        .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                                    Text("\(score.score)")
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(PlinkoTheme.Palette.electricBlue)
+                                }
+                                
+                                VStack {
+                                    Text("Total")
+                                        .font(.caption2)
+                                        .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                                    Text("\(score.totalScore)")
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(PlinkoTheme.Palette.spherePrimary)
+                                }
+                                
+                                VStack {
+                                    Text("Best")
+                                        .font(.caption2)
+                                        .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                                    Text("\(score.bestScore)")
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(PlinkoTheme.Palette.gold)
+                                }
+                                
+                                VStack {
+                                    Text("Games")
+                                        .font(.caption2)
+                                        .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                                    Text("\(score.totalGames)")
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(PlinkoTheme.Palette.neonPink)
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(PlinkoTheme.Palette.backgroundDark.opacity(0.6))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(PlinkoTheme.Palette.neonPink.opacity(0.3), lineWidth: 1)
+                                )
+                        )
+                    }
+                }
+            }
+            
+            // Кнопка повернення
+            Button(action: {
+                game.showGame()
+            }) {
+                HStack {
+                    Image(systemName: "arrow.left.circle.fill")
+                    Text("Back to Game")
+                }
+                .font(.title3)
+                .fontWeight(.semibold)
+                .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                .padding(.horizontal, 30)
+                .padding(.vertical, 15)
+                .background(PlinkoTheme.Gradient.buttonPrimary)
+                .cornerRadius(15)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(PlinkoTheme.Palette.spherePrimary, lineWidth: 2)
+                )
+                .shadow(color: PlinkoTheme.Shadow.sphereShadow, radius: 10)
+            }
+        }
+        .padding()
+        .alert("Save Result", isPresented: $game.showSaveConfirmation) {
+            Button("Cancel", role: .cancel) {
+                game.cancelSaveScore()
+            }
+            Button("Save & Reset Game", role: .destructive) {
+                game.confirmSaveScore()
+            }
+        } message: {
+            Text("Do you agree to save the result and start a new session?")
+        }
     }
 }
 

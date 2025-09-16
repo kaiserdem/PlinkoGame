@@ -23,6 +23,25 @@ class PlinkoGameViewModel: ObservableObject {
     @Published var bestScore: Int = 0
     @Published var showCelebration: Bool = false
     
+    // Навігація між екранами
+    @Published var currentScreen: GameScreen = .game
+    
+    // Налаштування фізики
+    @Published var bounceStrength: BounceStrength = .medium
+    @Published var gravityStrength: GravityStrength = .medium
+    
+    // Рейтинг
+    @Published var playerName: String = ""
+    @Published var savedScores: [PlayerScore] = []
+    
+    // Статистика гравця
+    @Published var totalScore: Int = 0
+    @Published var averageScore: Double = 0.0
+    @Published var efficiencyCoefficient: Double = 0.0
+    
+    // Поп-ап для збереження
+    @Published var showSaveConfirmation: Bool = false
+    
     private var pins: [Pin] = []
     private var slots: [Slot] = []
     private var gameTimer: Timer?
@@ -40,6 +59,9 @@ class PlinkoGameViewModel: ObservableObject {
     
     init() {
         setupGame()
+        loadScoresFromUserDefaults()
+        // НЕ завантажуємо статистику гравця при запуску - вона має бути скинута
+        resetPlayerStatistics()
     }
     
     private func setupGame() {
@@ -174,7 +196,7 @@ class PlinkoGameViewModel: ObservableObject {
         lastPosition = currentBall.position
         
         // Додаємо гравітацію до вертикальної швидкості
-        let gravity: CGFloat = 0.3
+        let gravity: CGFloat = gravityStrength.value
         currentBall.velocity.dy += gravity
         
         // Додаємо опір повітря (невелике уповільнення)
@@ -209,7 +231,7 @@ class PlinkoGameViewModel: ObservableObject {
                 let speed = sqrt(pow(currentBall.velocity.dx, 2) + pow(currentBall.velocity.dy, 2))
                 
                 // Відбиття з втратою енергії та збереженням мінімальної швидкості
-                let bounceSpeed = max(speed * 0.8, 1.5) // Збільшуємо мінімальну швидкість
+                let bounceSpeed = max(speed * bounceStrength.multiplier, 1.5) // Використовуємо налаштування відбиття
                 currentBall.velocity.dx = cos(angle) * bounceSpeed
                 currentBall.velocity.dy = sin(angle) * bounceSpeed
                 
@@ -229,6 +251,7 @@ class PlinkoGameViewModel: ObservableObject {
         for slot in slots {
             if slot.rect.contains(currentBall.position) {
                 score += slot.points
+                totalScore += slot.points  // Додаємо до загального рахунку
                 SoundManager.shared.playSlotHit()
                 
                 // Оновлюємо статистику
@@ -264,6 +287,9 @@ class PlinkoGameViewModel: ObservableObject {
         gameTimer?.invalidate()
         gameTimer = nil
         ball = nil
+        
+        // Оновлюємо статистику після кожної гри
+        updatePlayerStatistics()
     }
     
     private func startCelebration() {
@@ -273,11 +299,191 @@ class PlinkoGameViewModel: ObservableObject {
     }
     
     func resetStats() {
-        totalGames = 0
-        bestScore = 0
-        score = 0
+        resetPlayerStatistics()
+        // Зберігаємо скинуту статистику в UserDefaults
+        savePlayerStatistics()
     }
     
     func getPins() -> [Pin] { pins }
     func getSlots() -> [Slot] { slots }
+    
+    // MARK: - Navigation Methods
+    func showSettings() {
+        currentScreen = .settings
+    }
+    
+    func showRating() {
+        currentScreen = .rating
+    }
+    
+    func showGame() {
+        currentScreen = .game
+    }
+    
+    // MARK: - Rating Methods
+    func saveScore() {
+        guard !playerName.isEmpty && score > 0 else { return }
+        
+        // Показуємо поп-ап з попередженням
+        showSaveConfirmation = true
+    }
+    
+    func confirmSaveScore() {
+        // Рахунок вже додано до totalScore під час гри
+        
+        // Розраховуємо коефіцієнт ефективності ПЕРЕД збереженням
+        let currentEfficiency = calculateEfficiencyCoefficient()
+        
+        let newScore = PlayerScore(
+            name: playerName, 
+            score: score, 
+            totalScore: totalScore, 
+            bestScore: bestScore, 
+            totalGames: totalGames, 
+            efficiencyCoefficient: currentEfficiency, 
+            date: Date()
+        )
+        savedScores.append(newScore)
+        savedScores.sort { $0.efficiencyCoefficient > $1.efficiencyCoefficient } // Сортуємо за ефективністю
+        
+        // Зберігаємо тільки топ-10 результатів
+        if savedScores.count > 10 {
+            savedScores = Array(savedScores.prefix(10))
+        }
+        
+        // Зберігаємо в UserDefaults
+        saveScoresToUserDefaults()
+        
+        // Скидаємо ВСЕ на нулі
+        resetPlayerStatistics()
+        savePlayerStatistics()
+        
+        // Закриваємо поп-ап
+        showSaveConfirmation = false
+    }
+    
+    private func calculateEfficiencyCoefficient() -> Double {
+        // Вираховуємо середній рахунок
+        let avgScore = totalGames > 0 ? Double(totalScore) / Double(totalGames) : 0.0
+        
+        // Вираховуємо коефіцієнт корисної загальної суми
+        // Формула: (bestScore * 0.4) + (averageScore * 0.3) + (totalGames * 0.3)
+        return (Double(bestScore) * 0.4) + (avgScore * 0.3) + (Double(totalGames) * 0.3)
+    }
+    
+    func cancelSaveScore() {
+        showSaveConfirmation = false
+    }
+    
+    
+    private func updatePlayerStatistics() {
+        // Вираховуємо середній рахунок
+        averageScore = totalGames > 0 ? Double(totalScore) / Double(totalGames) : 0.0
+        
+        // Вираховуємо коефіцієнт корисної загальної суми
+        efficiencyCoefficient = calculateEfficiencyCoefficient()
+    }
+    
+    private func saveScoresToUserDefaults() {
+        if let encoded = try? JSONEncoder().encode(savedScores) {
+            UserDefaults.standard.set(encoded, forKey: "SavedScores")
+        }
+    }
+    
+    func loadScoresFromUserDefaults() {
+        if let data = UserDefaults.standard.data(forKey: "SavedScores"),
+           let decoded = try? JSONDecoder().decode([PlayerScore].self, from: data) {
+            savedScores = decoded
+        }
+    }
+    
+    private func savePlayerStatistics() {
+        let statistics: [String: Any] = [
+            "totalScore": totalScore,
+            "averageScore": averageScore,
+            "efficiencyCoefficient": efficiencyCoefficient,
+            "bestScore": bestScore,
+            "totalGames": totalGames
+        ]
+        UserDefaults.standard.set(statistics, forKey: "PlayerStatistics")
+    }
+    
+    func loadPlayerStatistics() {
+        if let statistics = UserDefaults.standard.dictionary(forKey: "PlayerStatistics") {
+            totalScore = statistics["totalScore"] as? Int ?? 0
+            averageScore = statistics["averageScore"] as? Double ?? 0.0
+            efficiencyCoefficient = statistics["efficiencyCoefficient"] as? Double ?? 0.0
+            bestScore = statistics["bestScore"] as? Int ?? 0
+            totalGames = statistics["totalGames"] as? Int ?? 0
+        }
+    }
+    
+    private func resetPlayerStatistics() {
+        totalScore = 0
+        averageScore = 0.0
+        efficiencyCoefficient = 0.0
+        bestScore = 0
+        totalGames = 0
+        score = 0
+        showCelebration = false
+    }
+}
+
+// MARK: - Game Screen Enum
+enum GameScreen {
+    case game
+    case settings
+    case rating
+}
+
+// MARK: - Player Score Model
+struct PlayerScore: Codable, Identifiable {
+    let id: UUID
+    let name: String
+    let score: Int
+    let totalScore: Int
+    let bestScore: Int
+    let totalGames: Int
+    let efficiencyCoefficient: Double
+    let date: Date
+    
+    init(name: String, score: Int, totalScore: Int, bestScore: Int, totalGames: Int, efficiencyCoefficient: Double, date: Date) {
+        self.id = UUID()
+        self.name = name
+        self.score = score
+        self.totalScore = totalScore
+        self.bestScore = bestScore
+        self.totalGames = totalGames
+        self.efficiencyCoefficient = efficiencyCoefficient
+        self.date = date
+    }
+}
+
+// MARK: - Physics Settings Enums
+enum BounceStrength: String, CaseIterable {
+    case weak = "Weak"
+    case medium = "Medium"
+    case strong = "Strong"
+    
+    var multiplier: CGFloat {
+        switch self {
+        case .weak: return 0.42  // 0.6 * 0.7 (зменшуємо на 30%)
+        case .medium: return 0.56  // 0.8 * 0.7 (зменшуємо на 30%)
+        case .strong: return 0.7  // 1.0 * 0.7 (зменшуємо на 30%)
+        }
+    }
+}
+
+enum GravityStrength: String, CaseIterable {
+    case light = "Light"
+    case medium = "Medium"
+    case heavy = "Heavy"
+    
+    var value: CGFloat {
+        switch self {
+        case .light: return 0.2
+        case .medium: return 0.3
+        case .heavy: return 0.5
+        }
+    }
 }
