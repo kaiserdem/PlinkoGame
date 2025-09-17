@@ -32,6 +32,7 @@ class PlinkoGameViewModel: ObservableObject {
     @Published var isTriplePointsActive: Bool = false
     @Published var isSlotShuffleActive: Bool = false
     @Published var isMagneticToBestActive: Bool = false
+    @Published var se: Bool = false
     
     var purchasedBonusesCount: Int {
         shopItems.filter { $0.isPurchased }.count
@@ -72,8 +73,9 @@ class PlinkoGameViewModel: ObservableObject {
         switch screenHeight {
         case 667...700:
             pinOffset = 180
+            se = true
         case 700...900:
-            pinOffset = 220
+            pinOffset = 200
         case 900...1000:
             pinOffset = 230
         default:

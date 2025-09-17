@@ -14,7 +14,6 @@ struct ContentView: View {
                 VStack(spacing: 10) {
                     gameTitleView
                     
-                    //Spacer()
                     
                 gameStatsWithNavigationView
                     
@@ -122,7 +121,7 @@ struct ContentView: View {
             
             pinsView
             slotsView
-                .offset(y: -10)
+                .offset(y: game.se ? 10 : -10)
             ballView
             celebrationView
         }
