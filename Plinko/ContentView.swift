@@ -118,10 +118,11 @@ struct ContentView: View {
                 .shadow(color: PlinkoTheme.Shadow.purpleGlow, radius: 20)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.horizontal, 20)
-                .padding(.vertical, 30)
+                .padding(.vertical, 0)
             
             pinsView
             slotsView
+                .offset(y: -10)
             ballView
             celebrationView
         }

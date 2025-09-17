@@ -25,6 +25,13 @@ class PlinkoGameViewModel: ObservableObject {
     @Published var selectedBonusItem: ShopItem?
     @Published var currentActiveBonus: String? = nil
     @Published var scoreMultiplierBallsLeft: Int = 0
+    @Published var destroyedPins: Set<Int> = []
+    @Published var isDoublePointsActive: Bool = false
+    @Published var originalSlots: [Slot] = []
+    @Published var isNeonThemeActive: Bool = false
+    @Published var isTriplePointsActive: Bool = false
+    @Published var isSlotShuffleActive: Bool = false
+    @Published var isMagneticToBestActive: Bool = false
     
     var purchasedBonusesCount: Int {
         shopItems.filter { $0.isPurchased }.count
@@ -133,7 +140,14 @@ class PlinkoGameViewModel: ObservableObject {
     }
     
     private func updateGame() {
-        guard var currentBall = ball else { return }
+        // Обробляємо основний м'яч
+        if var currentBall = ball {
+            updateBall(&currentBall)
+            ball = currentBall
+        }
+    }
+    
+    private func updateBall(_ currentBall: inout Ball) {
         
         let distanceMoved = sqrt(pow(currentBall.position.x - lastPosition.x, 2) + 
                                pow(currentBall.position.y - lastPosition.y, 2))
@@ -166,6 +180,11 @@ class PlinkoGameViewModel: ObservableObject {
             applyMagneticEffect(to: &currentBall)
         }
         
+        // Застосовуємо Magnetic to Best ефект (Neon Theme)
+        if isMagneticToBestActive {
+            applyMagneticToBestEffect(to: &currentBall)
+        }
+        
         if currentBall.position.x - currentBall.radius <= 0 || 
            currentBall.position.x + currentBall.radius >= gameWidth {
             currentBall.velocity.dx *= -0.8
@@ -173,27 +192,30 @@ class PlinkoGameViewModel: ObservableObject {
                                        min(gameWidth - currentBall.radius, currentBall.position.x))
         }
         
-        for pin in pins {
-            let distance = sqrt(pow(currentBall.position.x - pin.position.x, 2) + 
-                              pow(currentBall.position.y - pin.position.y, 2))
-            
-            if distance < currentBall.radius + pin.radius {
-                SoundManager.shared.playPinHit()
+        // Перевіряємо зіткнення з пінами (тільки якщо Shield Ball не активний)
+        if currentActiveBonus != "Shield Ball" {
+            for pin in pins {
+                let distance = sqrt(pow(currentBall.position.x - pin.position.x, 2) + 
+                                  pow(currentBall.position.y - pin.position.y, 2))
                 
-                let angle = atan2(currentBall.position.y - pin.position.y, 
-                                currentBall.position.x - pin.position.x)
-                let speed = sqrt(pow(currentBall.velocity.dx, 2) + pow(currentBall.velocity.dy, 2))
-                
-                let bounceSpeed = max(speed * bounceStrength.multiplier, 1.5)
-                currentBall.velocity.dx = cos(angle) * bounceSpeed
-                currentBall.velocity.dy = sin(angle) * bounceSpeed
-                
-                let overlap = currentBall.radius + pin.radius - distance + 2
-                currentBall.position.x += cos(angle) * overlap
-                currentBall.position.y += sin(angle) * overlap
-                
-                if speed < 2.0 {
-                    currentBall.velocity.dy += 1.0
+                if distance < currentBall.radius + pin.radius {
+                    SoundManager.shared.playPinHit()
+                    
+                    let angle = atan2(currentBall.position.y - pin.position.y, 
+                                    currentBall.position.x - pin.position.x)
+                    let speed = sqrt(pow(currentBall.velocity.dx, 2) + pow(currentBall.velocity.dy, 2))
+                    
+                    let bounceSpeed = max(speed * bounceStrength.multiplier, 1.5)
+                    currentBall.velocity.dx = cos(angle) * bounceSpeed
+                    currentBall.velocity.dy = sin(angle) * bounceSpeed
+                    
+                    let overlap = currentBall.radius + pin.radius - distance + 2
+                    currentBall.position.x += cos(angle) * overlap
+                    currentBall.position.y += sin(angle) * overlap
+                    
+                    if speed < 2.0 {
+                        currentBall.velocity.dy += 1.0
+                    }
                 }
             }
         }
@@ -211,38 +233,59 @@ class PlinkoGameViewModel: ObservableObject {
                     if scoreMultiplierBallsLeft == 0 {
                         currentActiveBonus = nil
                         // Повертаємо бонус в магазин після використання
-                        returnBonusToShop("Score Multiplier")
+                        DispatchQueue.main.async {
+                            self.returnBonusToShop("Score Multiplier")
+                        }
                     }
+                }
+                
+                // Застосовуємо Double Points якщо активний
+                if isDoublePointsActive {
+                    pointsEarned *= 2
+                }
+                
+                // Застосовуємо Triple Points якщо активний
+                if isTriplePointsActive {
+                    pointsEarned *= 3
                 }
                 
                 score += pointsEarned
                 totalScore += pointsEarned
                 earnCoins(pointsEarned)
-                SoundManager.shared.playSlotHit()
+                DispatchQueue.main.async {
+                    SoundManager.shared.playSlotHit()
+                }
                 
                 totalGames += 1
                 if score > bestScore {
                     bestScore = score
-                    showCelebration = true
-                    startCelebration()
+                    DispatchQueue.main.async {
+                        self.showCelebration = true
+                        self.startCelebration()
+                    }
                 }
                 
-                endGame()
+                DispatchQueue.main.async {
+                    self.endGame()
+                }
                 return
             }
         }
         
         if currentBall.position.y > gameHeight {
-            endGame()
+            DispatchQueue.main.async {
+                self.endGame()
+            }
             return
         }
         
         if Date().timeIntervalSince(gameStartTime) > 30 {
-            endGame()
+            DispatchQueue.main.async {
+                self.endGame()
+            }
             return
         }
         
-        ball = currentBall
     }
     
     private func endGame() {
@@ -281,7 +324,11 @@ class PlinkoGameViewModel: ObservableObject {
         showResetConfirmation = false
     }
     
-    func getPins() -> [Pin] { pins }
+    func getPins() -> [Pin] { 
+        return pins.enumerated().compactMap { index, pin in
+            destroyedPins.contains(index) ? nil : pin
+        }
+    }
     func getSlots() -> [Slot] { slots }
     
     func showSettings() {
@@ -409,15 +456,15 @@ class PlinkoGameViewModel: ObservableObject {
     
     private func setupShopItems() {
         shopItems = [
-            ShopItem(name: "Score Multiplier", description: "Doubles points for next 5 balls. Perfect for maximizing your score when you're on a hot streak!", price: 200, icon: "multiply.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .red),
-            ShopItem(name: "Magnetic Ball", description: "Attracts to highest value slots for 20 seconds. The ball will curve towards the most valuable slots automatically!", price: 300, icon: "magnet.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .blue),
+            ShopItem(name: "Score Multiplier", description: "Doubles points for next 5 balls. Perfect for maximizing your score when you're on a hot streak!", price: 200, icon: "5.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .red),
+            ShopItem(name: "Magnetic Ball", description: "Attracts to highest value slots for 20 seconds. The ball will curve towards the most valuable slots automatically!", price: 300, icon: "20.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .blue),
             ShopItem(name: "Shield Ball", description: "Ignores pin collisions and flies straight down. Guaranteed to reach a slot without bouncing off pins!", price: 400, icon: "shield.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .green),
-            ShopItem(name: "Pin Destroyer", description: "Removes every second pin for 20 seconds. Makes the field much easier to navigate and score!", price: 350, icon: "trash.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .red),
-            ShopItem(name: "Double Points", description: "All slots give 2x points for 20 seconds. Every hit becomes twice as valuable!", price: 400, icon: "2.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .blue),
+            ShopItem(name: "Pin Destroyer", description: "Removes every second pin for 20 seconds. Makes the field much easier to navigate and score!", price: 350, icon: "20.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .red),
+            ShopItem(name: "Double Points", description: "All slots give 2x points for 20 seconds. Every hit becomes twice as valuable!", price: 400, icon: "multiply.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .blue),
             ShopItem(name: "Slot Shuffle", description: "Randomizes all slot positions. Adds excitement and challenge by changing the layout!", price: 300, icon: "shuffle.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .green),
-            ShopItem(name: "Triple Ball", description: "Launches 3 balls instead of 1. Triple your chances of scoring big points!", price: 500, icon: "3.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .yellow),
-            ShopItem(name: "Six Ball", description: "Launches 6 balls at once! Maximum scoring potential - can earn hundreds of points!", price: 800, icon: "6.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .orange),
-            ShopItem(name: "Neon Theme", description: "Adds glowing neon effects to all game elements. Pure visual enhancement for style!", price: 250, icon: "lightbulb.fill", type: .cosmetic, isPurchased: false, isAvailable: true, color: .purple)
+            ShopItem(name: "Triple Ball", description: "Triple points multiplier for 15 seconds. Every hit gives 3x points!", price: 500, icon: "15.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .yellow),
+            ShopItem(name: "Six Ball", description: "Shuffles slot positions for 20 seconds. Changes the layout to add challenge!", price: 800, icon: "20.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .orange),
+            ShopItem(name: "Neon Theme", description: "Attracts ball to best slots (50+ points) for 30 seconds. Enhanced targeting!", price: 250, icon: "30.circle.fill", type: .cosmetic, isPurchased: false, isAvailable: true, color: .purple)
         ]
     }
     
@@ -450,6 +497,35 @@ class PlinkoGameViewModel: ObservableObject {
         playerCoins += amount
     }
     
+    private func shuffleSlots() {
+        // Зберігаємо оригінальні слоти якщо ще не збережені
+        if originalSlots.isEmpty {
+            originalSlots = slots
+        }
+        
+        // Перемішуємо слоти
+        let shuffledSlots = slots.shuffled()
+        
+        // Оновлюємо позиції слотів, зберігаючи їх очки та кольори
+        for (index, slot) in shuffledSlots.enumerated() {
+            if index < slots.count {
+                slots[index] = Slot(
+                    rect: slots[index].rect, // Зберігаємо оригінальну позицію
+                    points: slot.points,     // Але змінюємо очки та колір
+                    color: slot.color
+                )
+            }
+        }
+    }
+    
+    private func restoreOriginalSlots() {
+        if !originalSlots.isEmpty {
+            slots = originalSlots
+            originalSlots.removeAll()
+        }
+    }
+    
+    
     func activateBonus(_ bonusName: String) {
         currentActiveBonus = bonusName
         
@@ -460,6 +536,64 @@ class PlinkoGameViewModel: ObservableObject {
             // Magnetic Ball працює 20 секунд
             DispatchQueue.main.asyncAfter(deadline: .now() + 20.0) {
                 self.currentActiveBonus = nil
+                // Повертаємо бонус в магазин після використання
+                self.returnBonusToShop(bonusName)
+            }
+        case "Pin Destroyer":
+            // Pin Destroyer працює 20 секунд
+            destroyEverySecondPin()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 20.0) {
+                self.currentActiveBonus = nil
+                // Відновлюємо всі піни
+                self.restoreAllPins()
+                // Повертаємо бонус в магазин після використання
+                self.returnBonusToShop(bonusName)
+            }
+        case "Double Points":
+            // Double Points працює 20 секунд
+            isDoublePointsActive = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 20.0) {
+                self.currentActiveBonus = nil
+                self.isDoublePointsActive = false
+                // Повертаємо бонус в магазин після використання
+                self.returnBonusToShop(bonusName)
+            }
+        case "Slot Shuffle":
+            // Slot Shuffle - миттєвий ефект
+            shuffleSlots()
+            // Деактивуємо одразу після використання
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.currentActiveBonus = nil
+                // Повертаємо бонус в магазин після використання
+                self.returnBonusToShop(bonusName)
+            }
+        case "Triple Ball":
+            // Triple Ball - множник x3 на 15 секунд
+            isTriplePointsActive = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) {
+                self.currentActiveBonus = nil
+                self.isTriplePointsActive = false
+                // Повертаємо бонус в магазин після використання
+                self.returnBonusToShop(bonusName)
+            }
+        case "Six Ball":
+            // Six Ball - перемішування слотів на 20 секунд
+            isSlotShuffleActive = true
+            shuffleSlots()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 20.0) {
+                self.currentActiveBonus = nil
+                self.isSlotShuffleActive = false
+                // Відновлюємо оригінальні слоти
+                self.restoreOriginalSlots()
+                // Повертаємо бонус в магазин після використання
+                self.returnBonusToShop(bonusName)
+            }
+        case "Neon Theme":
+            // Neon Theme - притягування до найкращих слотів на 30 секунд
+            isMagneticToBestActive = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 30.0) {
+                self.currentActiveBonus = nil
+                self.isMagneticToBestActive = false
                 // Повертаємо бонус в магазин після використання
                 self.returnBonusToShop(bonusName)
             }
@@ -509,6 +643,57 @@ class PlinkoGameViewModel: ObservableObject {
                 }
             }
         }
+    }
+    
+    private func applyMagneticToBestEffect(to ball: inout Ball) {
+        // Знаходимо слоти з найвищими очками (100 та 50 очок)
+        let bestSlots = slots.filter { $0.points >= 50 }
+        
+        if !bestSlots.isEmpty {
+            // Знаходимо найближчий найкращий слот
+            var closestSlot: Slot?
+            var minDistance: CGFloat = CGFloat.greatestFiniteMagnitude
+            
+            for slot in bestSlots {
+                let distance = sqrt(pow(ball.position.x - slot.rect.midX, 2) + 
+                                  pow(ball.position.y - slot.rect.midY, 2))
+                if distance < minDistance {
+                    minDistance = distance
+                    closestSlot = slot
+                }
+            }
+            
+            if let targetSlot = closestSlot {
+                // Розраховуємо напрямок до цільового слоту
+                let dx = targetSlot.rect.midX - ball.position.x
+                let dy = targetSlot.rect.midY - ball.position.y
+                let distance = sqrt(dx * dx + dy * dy)
+                
+                if distance > 0 {
+                    // Сила магніту (0.4 - сильніше ніж у Magnetic Ball)
+                    let magneticForce: CGFloat = 0.4
+                    let normalizedDx = dx / distance
+                    let normalizedDy = dy / distance
+                    
+                    // Застосовуємо магнітну силу до швидкості м'яча
+                    ball.velocity.dx += normalizedDx * magneticForce
+                    ball.velocity.dy += normalizedDy * magneticForce
+                }
+            }
+        }
+    }
+    
+    private func destroyEverySecondPin() {
+        destroyedPins.removeAll()
+        for (index, _) in pins.enumerated() {
+            if index % 2 == 1 { // Кожен другий пін (індекси 1, 3, 5, ...)
+                destroyedPins.insert(index)
+            }
+        }
+    }
+    
+    private func restoreAllPins() {
+        destroyedPins.removeAll()
     }
     
     private func returnBonusToShop(_ bonusName: String) {
