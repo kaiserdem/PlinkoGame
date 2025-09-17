@@ -34,6 +34,14 @@ class PlinkoGameViewModel: ObservableObject {
     @Published var isMagneticToBestActive: Bool = false
     @Published var se: Bool = false
     
+    // Bonus Screen variables
+    @Published var lastBonusClaimTime: Date?
+    @Published var timeUntilNextBonus: TimeInterval = 0
+    @Published var isBonusAvailable: Bool = false
+    @Published var isSpinning: Bool = false
+    @Published var spinResult: String = ""
+    @Published var showSpinResult: Bool = false
+    
     var purchasedBonusesCount: Int {
         shopItems.filter { $0.isPurchased }.count
     }
@@ -42,6 +50,7 @@ class PlinkoGameViewModel: ObservableObject {
     private var slots: [Slot] = []
     private var gameTimer: Timer?
     private var celebrationTimer: Timer?
+    private var bonusTimer: Timer?
     private var collisionCount: Int = 0
     private var lastPosition: CGPoint = .zero
     private var gameStartTime: Date = Date()
@@ -58,7 +67,9 @@ class PlinkoGameViewModel: ObservableObject {
         loadScoresFromUserDefaults()
         resetPlayerStatistics()
         setupShopItems()
-        playerCoins = 500
+        playerCoins = 0
+        loadBonusData()
+        startBonusTimer()
     }
     
     private func setupGame() {
@@ -142,7 +153,7 @@ class PlinkoGameViewModel: ObservableObject {
     }
     
     private func updateGame() {
-        // Обробляємо основний м'яч
+        // Process main ball
         if var currentBall = ball {
             updateBall(&currentBall)
             ball = currentBall
@@ -177,12 +188,12 @@ class PlinkoGameViewModel: ObservableObject {
         currentBall.position.x += currentBall.velocity.dx
         currentBall.position.y += currentBall.velocity.dy
         
-        // Застосовуємо Magnetic Ball ефект
+        // Apply Magnetic Ball effect
         if currentActiveBonus == "Magnetic Ball" {
             applyMagneticEffect(to: &currentBall)
         }
         
-        // Застосовуємо Magnetic to Best ефект (Neon Theme)
+        // Apply Magnetic to Best effect (Neon Theme)
         if isMagneticToBestActive {
             applyMagneticToBestEffect(to: &currentBall)
         }
@@ -194,7 +205,7 @@ class PlinkoGameViewModel: ObservableObject {
                                        min(gameWidth - currentBall.radius, currentBall.position.x))
         }
         
-        // Перевіряємо зіткнення з пінами (тільки якщо Shield Ball не активний)
+        // Check pin collisions (only if Shield Ball is not active)
         if currentActiveBonus != "Shield Ball" {
             for pin in pins {
                 let distance = sqrt(pow(currentBall.position.x - pin.position.x, 2) + 
@@ -226,27 +237,27 @@ class PlinkoGameViewModel: ObservableObject {
             if slot.rect.contains(currentBall.position) {
                 var pointsEarned = slot.points
                 
-                // Застосовуємо Score Multiplier якщо активний
+                // Apply Score Multiplier if active
                 if currentActiveBonus == "Score Multiplier" && scoreMultiplierBallsLeft > 0 {
                     pointsEarned *= 2
                     scoreMultiplierBallsLeft -= 1
                     
-                    // Якщо закінчилися м'ячі для мультиплікатора, деактивуємо бонус
+                    // If multiplier balls are finished, deactivate bonus
                     if scoreMultiplierBallsLeft == 0 {
                         currentActiveBonus = nil
-                        // Повертаємо бонус в магазин після використання
+                        // Return bonus to shop after use
                         DispatchQueue.main.async {
                             self.returnBonusToShop("Score Multiplier")
                         }
                     }
                 }
                 
-                // Застосовуємо Double Points якщо активний
+                // Apply Double Points if active
                 if isDoublePointsActive {
                     pointsEarned *= 2
                 }
                 
-                // Застосовуємо Triple Points якщо активний
+                // Apply Triple Points if active
                 if isTriplePointsActive {
                     pointsEarned *= 3
                 }
@@ -351,6 +362,10 @@ class PlinkoGameViewModel: ObservableObject {
     
     func showBonuses() {
         currentScreen = .bonuses
+    }
+    
+    func showDailyBonus() {
+        currentScreen = .dailyBonus
     }
     
     func showBonusDetail(_ item: ShopItem) {
@@ -488,10 +503,10 @@ class PlinkoGameViewModel: ObservableObject {
             )
         }
         
-        // Автоматично активуємо бонус після покупки
+        // Automatically activate bonus after purchase
         activateBonus(item.name)
         
-        // Повертаємося на головний екран
+        // Return to main screen
         currentScreen = .game
     }
     
@@ -712,6 +727,102 @@ class PlinkoGameViewModel: ObservableObject {
             )
         }
     }
+    
+    // MARK: - Bonus Screen Methods
+    
+    private func loadBonusData() {
+        if let lastClaimTime = UserDefaults.standard.object(forKey: "LastBonusClaimTime") as? Date {
+            lastBonusClaimTime = lastClaimTime
+        }
+        updateBonusStatus()
+    }
+    
+    private func saveBonusData() {
+        if let lastClaimTime = lastBonusClaimTime {
+            UserDefaults.standard.set(lastClaimTime, forKey: "LastBonusClaimTime")
+        }
+    }
+    
+    private func startBonusTimer() {
+        bonusTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            self.updateBonusStatus()
+        }
+    }
+    
+    private func updateBonusStatus() {
+        guard let lastClaimTime = lastBonusClaimTime else {
+            isBonusAvailable = true
+            timeUntilNextBonus = 0
+            return
+        }
+        
+        let timeSinceLastClaim = Date().timeIntervalSince(lastClaimTime)
+        let threeHoursInSeconds: TimeInterval = 3 * 60 * 60 // 3 години
+        
+        if timeSinceLastClaim >= threeHoursInSeconds {
+            isBonusAvailable = true
+            timeUntilNextBonus = 0
+        } else {
+            isBonusAvailable = false
+            timeUntilNextBonus = threeHoursInSeconds - timeSinceLastClaim
+        }
+    }
+    
+    func claimBonus() {
+        guard isBonusAvailable && !isSpinning else { return }
+        
+        isSpinning = true
+        spinResult = ""
+        
+        // Симуляція крутіння (2 секунди)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            self.performSpin()
+        }
+    }
+    
+    private func performSpin() {
+        // Список можливих бонусів - тільки бали
+        let possibleBonuses = [
+            ("Points", 300),
+            ("Points", 500),
+            ("Points", 800)
+        ]
+        
+        // Випадковий вибір бонусу
+        let randomBonus = possibleBonuses.randomElement()!
+        
+        // Додаємо бали
+        score += randomBonus.1
+        totalScore += randomBonus.1
+        spinResult = "You got \(randomBonus.1) points!"
+        
+        // Оновлюємо час останнього отримання бонусу
+        lastBonusClaimTime = Date()
+        saveBonusData()
+        updateBonusStatus()
+        
+        // Показуємо результат
+        showSpinResult = true
+        isSpinning = false
+        
+        // Ховаємо результат через 3 секунди
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            self.showSpinResult = false
+        }
+    }
+    
+    func formatTimeRemaining(_ timeInterval: TimeInterval) -> String {
+        let totalSeconds = Int(timeInterval)
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let seconds = totalSeconds % 60
+        
+        if hours > 0 {
+            return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            return String(format: "%02d:%02d", minutes, seconds)
+        }
+    }
 }
 
 enum GameScreen {
@@ -721,6 +832,7 @@ enum GameScreen {
     case shop
     case bonuses
     case bonusDetail(ShopItem)
+    case dailyBonus
 }
 
 struct PlayerScore: Codable, Identifiable {

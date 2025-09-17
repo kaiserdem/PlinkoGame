@@ -37,6 +37,8 @@ struct ContentView: View {
                 bonusesScreen
             case .bonusDetail(let item):
                 bonusDetailScreen(item: item)
+            case .dailyBonus:
+                dailyBonusScreen
             }
         }
         
@@ -121,7 +123,7 @@ struct ContentView: View {
             
             pinsView
             slotsView
-                .offset(y: game.se ? 10 : -10)
+                .offset(y: game.se ? 10.0 : -10.0)
             ballView
             celebrationView
         }
@@ -730,7 +732,7 @@ struct ContentView: View {
             }
             
             Button(action: {
-                game.showBonuses()
+                game.showDailyBonus()
             }) {
                         HStack {
                     Image(systemName: "gift.fill")
@@ -1114,6 +1116,141 @@ struct ContentView: View {
         } else {
             return "Shop"
         }
+    }
+    
+    // MARK: - Daily Bonus Screen
+    
+    private var dailyBonusScreen: some View {
+        VStack(spacing: 30) {
+            Text("Daily Bonus")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .foregroundColor(PlinkoTheme.Palette.gold)
+                .shadow(color: PlinkoTheme.Shadow.gold, radius: 10)
+                .padding(.top, 40)
+            
+            VStack(spacing: 20) {
+                if game.isBonusAvailable {
+                    VStack(spacing: 15) {
+                        Text("🎁 Bonus Available!")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(PlinkoTheme.Palette.gold)
+                        
+                        Text("Spin to get bonus points!")
+                            .font(.body)
+                            .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                        
+                        Button(action: {
+                            game.claimBonus()
+                        }) {
+                            HStack {
+                                if game.isSpinning {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.8)
+                                    Text("Spinning...")
+                                } else {
+                                    Image(systemName: "gift.fill")
+                                    Text("Claim Points")
+                                }
+                            }
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                            .padding(.horizontal, 30)
+                            .padding(.vertical, 15)
+                            .background(PlinkoTheme.Palette.gold)
+                            .cornerRadius(15)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 15)
+                                    .stroke(PlinkoTheme.Palette.neonPink, lineWidth: 2)
+                            )
+                            .shadow(color: PlinkoTheme.Shadow.gold, radius: 10)
+                        }
+                        .disabled(game.isSpinning)
+                    }
+                } else {
+                    VStack(spacing: 15) {
+                        Text("⏰ Next Bonus In")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                        
+                        Text(game.formatTimeRemaining(game.timeUntilNextBonus))
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundColor(PlinkoTheme.Palette.electricBlue)
+                            .monospacedDigit()
+                        
+                        Text("Come back later for your next bonus points!")
+                            .font(.body)
+                            .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                
+                if game.showSpinResult {
+                    VStack(spacing: 10) {
+                        Text("🎉 Congratulations!")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(PlinkoTheme.Palette.gold)
+                        
+                        Text(game.spinResult)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(PlinkoTheme.Palette.spherePrimary)
+                    }
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 15)
+                            .fill(PlinkoTheme.Palette.backgroundDark.opacity(0.8))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 15)
+                                    .stroke(PlinkoTheme.Palette.gold, lineWidth: 2)
+                            )
+                    )
+                    .shadow(color: PlinkoTheme.Shadow.gold, radius: 10)
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(PlinkoTheme.Palette.backgroundDark.opacity(0.6))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(PlinkoTheme.Palette.gold.opacity(0.3), lineWidth: 2)
+                    )
+            )
+            .padding(.horizontal, 20)
+            
+            Spacer()
+            
+            Button(action: {
+                game.showGame()
+            }) {
+                HStack {
+                    Image(systemName: "arrow.left.circle.fill")
+                    Text("Back to Game")
+                }
+                .font(.title3)
+                .fontWeight(.semibold)
+                .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .background(PlinkoTheme.Gradient.buttonPrimary)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(PlinkoTheme.Palette.spherePrimary, lineWidth: 2)
+                )
+                .shadow(color: PlinkoTheme.Shadow.sphereShadow, radius: 8)
+            }
+            .padding(.bottom, 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(PlinkoTheme.Gradient.gameFieldBackground)
     }
 }
 
