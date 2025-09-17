@@ -774,8 +774,8 @@ class PlinkoGameViewModel: ObservableObject {
         isSpinning = true
         spinResult = ""
         
-        // Симуляція крутіння (2 секунди)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+        // Spinning simulation (5 seconds)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
             self.performSpin()
         }
     }

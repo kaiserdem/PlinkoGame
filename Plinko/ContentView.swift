@@ -1132,12 +1132,12 @@ struct ContentView: View {
             VStack(spacing: 20) {
                 if game.isBonusAvailable {
                     VStack(spacing: 15) {
-                        Text("🎁 Bonus Available!")
+                        Text("    🎁 Bonus Available!    ")
                             .font(.title2)
                             .fontWeight(.bold)
                             .foregroundColor(PlinkoTheme.Palette.gold)
                         
-                        Text("Spin to get bonus points!")
+                        Text("    Spin to get bonus points!    ")
                             .font(.body)
                             .foregroundColor(PlinkoTheme.Palette.textSecondary)
                         
@@ -1146,10 +1146,7 @@ struct ContentView: View {
                         }) {
                             HStack {
                                 if game.isSpinning {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                        .scaleEffect(0.8)
-                                    Text("Spinning...")
+                                    spinningWheelView
                                 } else {
                                     Image(systemName: "gift.fill")
                                     Text("Claim Points")
@@ -1170,9 +1167,10 @@ struct ContentView: View {
                         }
                         .disabled(game.isSpinning)
                     }
+                    
                 } else {
                     VStack(spacing: 15) {
-                        Text("⏰ Next Bonus In")
+                        Text("    ⏰ Next Bonus In    ")
                             .font(.title2)
                             .fontWeight(.bold)
                             .foregroundColor(PlinkoTheme.Palette.textPrimary)
@@ -1183,7 +1181,7 @@ struct ContentView: View {
                             .foregroundColor(PlinkoTheme.Palette.electricBlue)
                             .monospacedDigit()
                         
-                        Text("Come back later for your next bonus points!")
+                        Text("    Come back later for your next bonus points!    ")
                             .font(.body)
                             .foregroundColor(PlinkoTheme.Palette.textSecondary)
                             .multilineTextAlignment(.center)
@@ -1214,7 +1212,7 @@ struct ContentView: View {
                     .shadow(color: PlinkoTheme.Shadow.gold, radius: 10)
                 }
             }
-            .padding()
+            .padding(50)
             .background(
                 RoundedRectangle(cornerRadius: 20)
                     .fill(PlinkoTheme.Palette.backgroundDark.opacity(0.6))
@@ -1251,6 +1249,71 @@ struct ContentView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(PlinkoTheme.Gradient.gameFieldBackground)
+    }
+    
+    // MARK: - Spinning Wheel Animation
+    
+    private var spinningWheelView: some View {
+        ZStack {
+            // Outer glow ring
+            Circle()
+                .stroke(
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            Color.yellow.opacity(0.8),
+                            Color.orange.opacity(0.6),
+                            Color.red.opacity(0.4),
+                            Color.purple.opacity(0.6),
+                            Color.blue.opacity(0.8)
+                        ]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 8
+                )
+                .frame(width: 60, height: 60)
+                .rotationEffect(.degrees(game.isSpinning ? 360 : 0))
+                .animation(
+                    Animation.linear(duration: 1.0)
+                        .repeatForever(autoreverses: false),
+                    value: game.isSpinning
+                )
+            
+            // Inner spinning circle
+            Circle()
+                .fill(
+                    RadialGradient(
+                        gradient: Gradient(colors: [
+                            Color.white.opacity(0.9),
+                            Color.yellow.opacity(0.7),
+                            Color.orange.opacity(0.5),
+                            Color.red.opacity(0.3)
+                        ]),
+                        center: .center,
+                        startRadius: 0,
+                        endRadius: 25
+                    )
+                )
+                .frame(width: 50, height: 50)
+                .rotationEffect(.degrees(game.isSpinning ? -360 : 0))
+                .animation(
+                    Animation.linear(duration: 0.8)
+                        .repeatForever(autoreverses: false),
+                    value: game.isSpinning
+                )
+            
+            // Center gift icon
+            Image(systemName: "gift.fill")
+                .font(.title2)
+                .foregroundColor(.white)
+                .scaleEffect(game.isSpinning ? 1.2 : 1.0)
+                .animation(
+                    Animation.easeInOut(duration: 0.5)
+                        .repeatForever(autoreverses: true),
+                    value: game.isSpinning
+                )
+        }
+        .shadow(color: Color.yellow.opacity(0.6), radius: 10)
     }
 }
 
