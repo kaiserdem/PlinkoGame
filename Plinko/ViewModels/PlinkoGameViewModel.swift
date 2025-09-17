@@ -47,6 +47,7 @@ class PlinkoGameViewModel: ObservableObject {
         loadScoresFromUserDefaults()
         resetPlayerStatistics()
         setupShopItems()
+        playerCoins = 500
     }
     
     private func setupGame() {
