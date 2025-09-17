@@ -78,7 +78,7 @@ struct ContentView: View {
             
             HStack(spacing: 15) {
                 StatView(title: "Score", value: game.score, color: PlinkoTheme.Palette.electricBlue, shadow: PlinkoTheme.Shadow.blueGlow)
-                StatView(title: "Bonuses", value: game.purchasedBonusesCount, color: PlinkoTheme.Palette.spherePrimary, shadow: PlinkoTheme.Shadow.sphereGlow)
+                StatView(title: "Total", value: game.totalScore, color: PlinkoTheme.Palette.spherePrimary, shadow: PlinkoTheme.Shadow.sphereGlow)
                 StatView(title: "Best", value: game.bestScore, color: PlinkoTheme.Palette.gold, shadow: PlinkoTheme.Shadow.gold)
                 StatView(title: "Games", value: game.totalGames, color: PlinkoTheme.Palette.neonPink, shadow: PlinkoTheme.Shadow.neonGlow)
             }
