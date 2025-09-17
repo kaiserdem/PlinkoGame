@@ -1065,7 +1065,7 @@ struct ContentView: View {
             return "• Activates for next 5 balls\n• All points are doubled\n• Perfect timing for high-value slots\n• Visual: Ball glows red"
             
         case "Magnetic Ball":
-            return "• Ball curves toward highest slots\n• Magnetic force: 0.3 strength\n• Increases accuracy significantly\n• Visual: Blue trail effect"
+            return "• Ball curves toward highest slots\n• Magnetic force: 0.3 strength\n• Duration: 20 seconds\n• Increases accuracy significantly\n• Visual: Blue trail effect"
             
         case "Shield Ball":
             return "• Ignores all pin collisions\n• Flies straight to slots\n• Guaranteed slot hit\n• Visual: Green shield around ball"

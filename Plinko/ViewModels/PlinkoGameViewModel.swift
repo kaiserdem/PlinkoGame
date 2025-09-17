@@ -161,6 +161,11 @@ class PlinkoGameViewModel: ObservableObject {
         currentBall.position.x += currentBall.velocity.dx
         currentBall.position.y += currentBall.velocity.dy
         
+        // Застосовуємо Magnetic Ball ефект
+        if currentActiveBonus == "Magnetic Ball" {
+            applyMagneticEffect(to: &currentBall)
+        }
+        
         if currentBall.position.x - currentBall.radius <= 0 || 
            currentBall.position.x + currentBall.radius >= gameWidth {
             currentBall.velocity.dx *= -0.8
@@ -205,6 +210,8 @@ class PlinkoGameViewModel: ObservableObject {
                     // Якщо закінчилися м'ячі для мультиплікатора, деактивуємо бонус
                     if scoreMultiplierBallsLeft == 0 {
                         currentActiveBonus = nil
+                        // Повертаємо бонус в магазин після використання
+                        returnBonusToShop("Score Multiplier")
                     }
                 }
                 
@@ -403,7 +410,7 @@ class PlinkoGameViewModel: ObservableObject {
     private func setupShopItems() {
         shopItems = [
             ShopItem(name: "Score Multiplier", description: "Doubles points for next 5 balls. Perfect for maximizing your score when you're on a hot streak!", price: 200, icon: "multiply.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .red),
-            ShopItem(name: "Magnetic Ball", description: "Attracts to highest value slots. The ball will curve towards the most valuable slots automatically!", price: 300, icon: "magnet.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .blue),
+            ShopItem(name: "Magnetic Ball", description: "Attracts to highest value slots for 20 seconds. The ball will curve towards the most valuable slots automatically!", price: 300, icon: "magnet.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .blue),
             ShopItem(name: "Shield Ball", description: "Ignores pin collisions and flies straight down. Guaranteed to reach a slot without bouncing off pins!", price: 400, icon: "shield.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .green),
             ShopItem(name: "Pin Destroyer", description: "Removes every second pin for 20 seconds. Makes the field much easier to navigate and score!", price: 350, icon: "trash.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .red),
             ShopItem(name: "Double Points", description: "All slots give 2x points for 20 seconds. Every hit becomes twice as valuable!", price: 400, icon: "2.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .blue),
@@ -449,11 +456,73 @@ class PlinkoGameViewModel: ObservableObject {
         switch bonusName {
         case "Score Multiplier":
             scoreMultiplierBallsLeft = 5 // 5 м'ячів з подвоєними очками
+        case "Magnetic Ball":
+            // Magnetic Ball працює 20 секунд
+            DispatchQueue.main.asyncAfter(deadline: .now() + 20.0) {
+                self.currentActiveBonus = nil
+                // Повертаємо бонус в магазин після використання
+                self.returnBonusToShop(bonusName)
+            }
         default:
             // Простий таймер для інших бонусів - через 5 секунд бонус закінчується
             DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                 self.currentActiveBonus = nil
+                // Повертаємо бонус в магазин після використання
+                self.returnBonusToShop(bonusName)
             }
+        }
+    }
+    
+    private func applyMagneticEffect(to ball: inout Ball) {
+        // Знаходимо слоти з найвищими очками (100 очок)
+        let highValueSlots = slots.filter { $0.points == 100 }
+        
+        if !highValueSlots.isEmpty {
+            // Знаходимо найближчий високоцінний слот
+            var closestSlot: Slot?
+            var minDistance: CGFloat = CGFloat.greatestFiniteMagnitude
+            
+            for slot in highValueSlots {
+                let distance = sqrt(pow(ball.position.x - slot.rect.midX, 2) + 
+                                  pow(ball.position.y - slot.rect.midY, 2))
+                if distance < minDistance {
+                    minDistance = distance
+                    closestSlot = slot
+                }
+            }
+            
+            if let targetSlot = closestSlot {
+                // Розраховуємо напрямок до цільового слоту
+                let dx = targetSlot.rect.midX - ball.position.x
+                let dy = targetSlot.rect.midY - ball.position.y
+                let distance = sqrt(dx * dx + dy * dy)
+                
+                if distance > 0 {
+                    // Сила магніту (0.3 як зазначено в описі)
+                    let magneticForce: CGFloat = 0.3
+                    let normalizedDx = dx / distance
+                    let normalizedDy = dy / distance
+                    
+                    // Застосовуємо магнітну силу до швидкості м'яча
+                    ball.velocity.dx += normalizedDx * magneticForce
+                    ball.velocity.dy += normalizedDy * magneticForce
+                }
+            }
+        }
+    }
+    
+    private func returnBonusToShop(_ bonusName: String) {
+        if let index = shopItems.firstIndex(where: { $0.name == bonusName }) {
+            shopItems[index] = ShopItem(
+                name: shopItems[index].name,
+                description: shopItems[index].description,
+                price: shopItems[index].price,
+                icon: shopItems[index].icon,
+                type: shopItems[index].type,
+                isPurchased: false, // Повертаємо як не куплений
+                isAvailable: shopItems[index].isAvailable,
+                color: shopItems[index].color
+            )
         }
     }
 }
