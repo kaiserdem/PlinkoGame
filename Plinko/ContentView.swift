@@ -703,8 +703,8 @@ struct ContentView: View {
                     Image(systemName: game.currentActiveBonus != nil ? getBonusIcon(for: game.currentActiveBonus!) : "cart.fill")
                     Text(getShopButtonText())
                 }
-                                .font(.title3)
-                .fontWeight(.semibold)
+                .font(game.currentActiveBonus != nil ? .caption : .title3)
+                                .fontWeight(game.currentActiveBonus != nil ? .regular : .semibold)
                                 .foregroundColor(PlinkoTheme.Palette.textPrimary)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
@@ -752,6 +752,7 @@ struct ContentView: View {
                 .shadow(color: PlinkoTheme.Shadow.gold, radius: 8)
             }
         }
+        .frame(height: 50)
         .padding(.horizontal)
         .padding(.bottom, 10)
     }
@@ -1137,35 +1138,53 @@ struct ContentView: View {
                             .fontWeight(.bold)
                             .foregroundColor(PlinkoTheme.Palette.gold)
                         
-                        Text("    Spin to get bonus points!    ")
+                        Text("    Spin to get bonus coins!    ")
                             .font(.body)
                             .foregroundColor(PlinkoTheme.Palette.textSecondary)
                         
-                        Button(action: {
-                            game.claimBonus()
-                        }) {
-                            HStack {
-                                if game.isSpinning {
-                                    spinningWheelView
-                                } else {
+                        if game.isSpinning {
+                            VStack(spacing: 20) {
+                                Text("Get Ready!")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                
+                                // Gift image with countdown
+                                VStack(spacing: 15) {
                                     Image(systemName: "gift.fill")
-                                    Text("Claim Points")
+                                        .font(.system(size: 80))
+                                        .foregroundColor(.yellow)
+                                        .shadow(color: .yellow, radius: 10)
+                                    
+                                    Text("\(game.countdownNumber)")
+                                        .font(.system(size: 60, weight: .bold))
+                                        .foregroundColor(.white)
+                                        .shadow(color: .black, radius: 5)
                                 }
                             }
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(PlinkoTheme.Palette.textPrimary)
-                            .padding(.horizontal, 30)
-                            .padding(.vertical, 15)
-                            .background(PlinkoTheme.Palette.gold)
-                            .cornerRadius(15)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 15)
-                                    .stroke(PlinkoTheme.Palette.neonPink, lineWidth: 2)
-                            )
-                            .shadow(color: PlinkoTheme.Shadow.gold, radius: 10)
+                        } else {
+                            Button(action: {
+                                game.claimBonus()
+                            }) {
+                                HStack {
+                                    Image(systemName: "gift.fill")
+                                    Text("Claim Coins")
+                                }
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                                .padding(.horizontal, 30)
+                                .padding(.vertical, 15)
+                                .background(PlinkoTheme.Palette.gold)
+                                .cornerRadius(15)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 15)
+                                        .stroke(PlinkoTheme.Palette.neonPink, lineWidth: 2)
+                                )
+                                .shadow(color: PlinkoTheme.Shadow.gold, radius: 10)
+                            }
+                            .disabled(game.isSpinning)
                         }
-                        .disabled(game.isSpinning)
                     }
                     
                 } else {
@@ -1181,7 +1200,7 @@ struct ContentView: View {
                             .foregroundColor(PlinkoTheme.Palette.electricBlue)
                             .monospacedDigit()
                         
-                        Text("    Come back later for your next bonus points!    ")
+                        Text("    Come back later for your next bonus coins!    ")
                             .font(.body)
                             .foregroundColor(PlinkoTheme.Palette.textSecondary)
                             .multilineTextAlignment(.center)

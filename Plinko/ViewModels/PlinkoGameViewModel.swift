@@ -41,6 +41,7 @@ class PlinkoGameViewModel: ObservableObject {
     @Published var isSpinning: Bool = false
     @Published var spinResult: String = ""
     @Published var showSpinResult: Bool = false
+    @Published var countdownNumber: Int = 5
     
     var purchasedBonusesCount: Int {
         shopItems.filter { $0.isPurchased }.count
@@ -773,28 +774,47 @@ class PlinkoGameViewModel: ObservableObject {
         
         isSpinning = true
         spinResult = ""
+        countdownNumber = 5
         
-        // Spinning simulation (5 seconds)
+        // Start countdown from 5 to 1
+        startCountdown()
+    }
+    
+    private func startCountdown() {
+        // Countdown from 5 to 1
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.countdownNumber = 4
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            self.countdownNumber = 3
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            self.countdownNumber = 2
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+            self.countdownNumber = 1
+        }
+        
+        // After 5 seconds, perform spin
         DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
             self.performSpin()
         }
     }
     
     private func performSpin() {
-        // Список можливих бонусів - тільки бали
+        // Список можливих бонусів - монети
         let possibleBonuses = [
-            ("Points", 300),
-            ("Points", 500),
-            ("Points", 800)
+            ("Coins", 350),
+            ("Coins", 400),
+            ("Coins", 450)
         ]
         
         // Випадковий вибір бонусу
         let randomBonus = possibleBonuses.randomElement()!
         
-        // Додаємо бали
-        score += randomBonus.1
-        totalScore += randomBonus.1
-        spinResult = "You got \(randomBonus.1) points!"
+        // Додаємо монети
+        playerCoins += randomBonus.1
+        spinResult = "You got \(randomBonus.1) coins!"
         
         // Оновлюємо час останнього отримання бонусу
         lastBonusClaimTime = Date()
