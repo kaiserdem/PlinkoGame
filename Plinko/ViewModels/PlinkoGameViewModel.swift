@@ -1,3 +1,4 @@
+
 import SwiftUI
 import Combine
 
@@ -22,6 +23,8 @@ class PlinkoGameViewModel: ObservableObject {
     @Published var shopItems: [ShopItem] = []
     @Published var playerCoins: Int = 0
     @Published var selectedBonusItem: ShopItem?
+    @Published var currentActiveBonus: String? = nil
+    @Published var scoreMultiplierBallsLeft: Int = 0
     
     var purchasedBonusesCount: Int {
         shopItems.filter { $0.isPurchased }.count
@@ -192,9 +195,22 @@ class PlinkoGameViewModel: ObservableObject {
         
         for slot in slots {
             if slot.rect.contains(currentBall.position) {
-                score += slot.points
-                totalScore += slot.points
-                earnCoins(slot.points)
+                var pointsEarned = slot.points
+                
+                // Застосовуємо Score Multiplier якщо активний
+                if currentActiveBonus == "Score Multiplier" && scoreMultiplierBallsLeft > 0 {
+                    pointsEarned *= 2
+                    scoreMultiplierBallsLeft -= 1
+                    
+                    // Якщо закінчилися м'ячі для мультиплікатора, деактивуємо бонус
+                    if scoreMultiplierBallsLeft == 0 {
+                        currentActiveBonus = nil
+                    }
+                }
+                
+                score += pointsEarned
+                totalScore += pointsEarned
+                earnCoins(pointsEarned)
                 SoundManager.shared.playSlotHit()
                 
                 totalGames += 1
@@ -415,10 +431,30 @@ class PlinkoGameViewModel: ObservableObject {
                 color: item.color
             )
         }
+        
+        // Автоматично активуємо бонус після покупки
+        activateBonus(item.name)
+        
+        // Повертаємося на головний екран
+        currentScreen = .game
     }
     
     func earnCoins(_ amount: Int) {
         playerCoins += amount
+    }
+    
+    func activateBonus(_ bonusName: String) {
+        currentActiveBonus = bonusName
+        
+        switch bonusName {
+        case "Score Multiplier":
+            scoreMultiplierBallsLeft = 5 // 5 м'ячів з подвоєними очками
+        default:
+            // Простий таймер для інших бонусів - через 5 секунд бонус закінчується
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                self.currentActiveBonus = nil
+            }
+        }
     }
 }
 

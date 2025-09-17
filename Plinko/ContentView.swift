@@ -671,9 +671,9 @@ struct ContentView: View {
                         .stroke(PlinkoTheme.Palette.spherePrimary, lineWidth: 2)
                 )
                 .shadow(color: PlinkoTheme.Shadow.sphereShadow, radius: 10)
-            }
-        }
-        .padding()
+                    }
+                }
+                .padding()
         .alert("Save Result", isPresented: $game.showSaveConfirmation) {
             Button("Cancel", role: .cancel) {
                 game.cancelSaveScore()
@@ -691,34 +691,52 @@ struct ContentView: View {
     private var shopAndBonusesButtonsView: some View {
         HStack(spacing: 20) {
             Button(action: {
-                game.showShop()
+                // Переходимо в магазин тільки якщо немає активного бонусу
+                if game.currentActiveBonus == nil {
+                    game.showShop()
+                }
+                // Якщо бонус активний - нічого не робимо
             }) {
                 HStack {
-                    Image(systemName: "cart.fill")
-                    Text("Shop")
+                    Image(systemName: game.currentActiveBonus != nil ? getBonusIcon(for: game.currentActiveBonus!) : "cart.fill")
+                    Text(getShopButtonText())
                 }
                                 .font(.title3)
                 .fontWeight(.semibold)
                                 .foregroundColor(PlinkoTheme.Palette.textPrimary)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
-                .background(PlinkoTheme.Gradient.buttonPrimary)
-                .cornerRadius(12)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(PlinkoTheme.Palette.spherePrimary, lineWidth: 2)
+                .background(
+                    game.currentActiveBonus != nil ? 
+                    Color.orange.opacity(0.8) : 
+                    PlinkoTheme.Palette.spherePrimary
                 )
-                .shadow(color: PlinkoTheme.Shadow.sphereShadow, radius: 8)
+                .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                        .stroke(
+                            game.currentActiveBonus != nil ? 
+                            Color.orange : 
+                            PlinkoTheme.Palette.spherePrimary, 
+                            lineWidth: 2
+                        )
+                )
+                .shadow(
+                    color: game.currentActiveBonus != nil ? 
+                    Color.orange.opacity(0.5) : 
+                    PlinkoTheme.Shadow.sphereShadow, 
+                    radius: 8
+                )
             }
             
             Button(action: {
                 game.showBonuses()
             }) {
-                HStack {
+                        HStack {
                     Image(systemName: "gift.fill")
                     Text("Bonuses")
                 }
-                .font(.title3)
+                                .font(.title3)
                 .fontWeight(.semibold)
                 .foregroundColor(PlinkoTheme.Palette.textPrimary)
                 .padding(.horizontal, 20)
@@ -772,16 +790,36 @@ struct ContentView: View {
             .padding(.top, 40)
             
             ScrollView {
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 15), count: 3), spacing: 15) {
-                    ForEach(game.shopItems) { item in
-                        ShopItemView(item: item, onPurchase: {
-                            game.purchaseItem(item)
-                        }, onTap: {
-                            game.showBonusDetail(item)
-                        })
+                if game.shopItems.filter({ !$0.isPurchased }).isEmpty {
+                    VStack(spacing: 20) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(PlinkoTheme.Palette.gold)
+                        
+                        Text("All Items Purchased!")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(PlinkoTheme.Palette.gold)
+                        
+                        Text("You have purchased all available bonuses. Great job!")
+                            .font(.body)
+                            .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 40)
                     }
+                    .padding(.vertical, 60)
+                } else {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 15), count: 3), spacing: 15) {
+                        ForEach(game.shopItems.filter { !$0.isPurchased }) { item in
+                            ShopItemView(item: item, onPurchase: {
+                                game.purchaseItem(item)
+                            }, onTap: {
+                                game.showBonusDetail(item)
+                            })
+                        }
+                    }
+                    .padding(.horizontal, 20)
                 }
-                .padding(.horizontal, 20)
             }
             
             Button(action: {
@@ -1052,6 +1090,29 @@ struct ContentView: View {
             
         default:
             return "Special effect details coming soon!"
+        }
+    }
+    
+    private func getBonusIcon(for bonusName: String) -> String {
+        switch bonusName {
+        case "Score Multiplier": return "star.circle.fill"
+        case "Magnetic Ball": return "magnet.fill"
+        case "Shield Ball": return "shield.fill"
+        case "Pin Destroyer": return "trash.circle.fill"
+        case "Double Points": return "2.circle.fill"
+        case "Slot Shuffle": return "shuffle.circle.fill"
+        case "Triple Ball": return "3.circle.fill"
+        case "Six Ball": return "6.circle.fill"
+        case "Neon Theme": return "lightbulb.fill"
+        default: return "star.fill"
+        }
+    }
+    
+    private func getShopButtonText() -> String {
+        if let activeBonus = game.currentActiveBonus {
+            return activeBonus
+        } else {
+            return "Shop"
         }
     }
 }
