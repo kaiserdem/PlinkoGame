@@ -14,33 +14,36 @@ struct ContentView: View {
                 VStack(spacing: 10) {
                     gameTitleView
                     
-                    Spacer()
+                    //Spacer()
                     
-                    gameStatsWithNavigationView
+                gameStatsWithNavigationView
                     
-                    Spacer()
-                    
-                    gameFieldView
-                    
-                    Spacer()
-                    
-                    controlButtonsView
+                    shopAndBonusesButtonsView
+                
+                Spacer()
+                
+                gameFieldView
+                
+                Spacer()
+                
+                controlButtonsView
                 }
             case .settings:
                 settingsScreen
             case .rating:
                 ratingScreen
+            case .shop:
+                shopScreen
+            case .bonuses:
+                bonusesScreen
+            case .bonusDetail(let item):
+                bonusDetailScreen(item: item)
             }
         }
-        .onAppear {
-            let screenBounds = UIScreen.main.bounds
-            let screenWidth = screenBounds.width
-            let screenHeight = screenBounds.height
-            
-            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            }
-        }
+        
     }
+    
+    // MARK: - Main Game Screen Components
     
     private var gameTitleView: some View {
         Text("Plinko Game")
@@ -50,6 +53,8 @@ struct ContentView: View {
             .shadow(color: PlinkoTheme.Shadow.sphereGlow, radius: 10)
             .padding(.top, 10)
     }
+    
+    // MARK: - Statistics & Navigation
     
     private var gameStatsWithNavigationView: some View {
         HStack(spacing: 15) {
@@ -73,7 +78,7 @@ struct ContentView: View {
             
             HStack(spacing: 15) {
                 StatView(title: "Score", value: game.score, color: PlinkoTheme.Palette.electricBlue, shadow: PlinkoTheme.Shadow.blueGlow)
-                StatView(title: "Total", value: game.totalScore, color: PlinkoTheme.Palette.spherePrimary, shadow: PlinkoTheme.Shadow.sphereGlow)
+                StatView(title: "Bonuses", value: game.purchasedBonusesCount, color: PlinkoTheme.Palette.spherePrimary, shadow: PlinkoTheme.Shadow.sphereGlow)
                 StatView(title: "Best", value: game.bestScore, color: PlinkoTheme.Palette.gold, shadow: PlinkoTheme.Shadow.gold)
                 StatView(title: "Games", value: game.totalGames, color: PlinkoTheme.Palette.neonPink, shadow: PlinkoTheme.Shadow.neonGlow)
             }
@@ -100,6 +105,8 @@ struct ContentView: View {
         .padding(.horizontal)
     }
     
+    // MARK: - Game Field Components
+    
     private var gameFieldView: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 15)
@@ -121,6 +128,8 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
+    // MARK: - Pins View
+    
     private var pinsView: some View {
         ForEach(Array(game.getPins().enumerated()), id: \.offset) { _, pin in
             ZStack {
@@ -137,6 +146,8 @@ struct ContentView: View {
             .shadow(color: PlinkoTheme.Shadow.pinGlow, radius: 5)
         }
     }
+    
+    // MARK: - Slots View
     
     private var slotsView: some View {
         ForEach(Array(game.getSlots().enumerated()), id: \.offset) { _, slot in
@@ -165,6 +176,8 @@ struct ContentView: View {
             .position(x: slot.rect.midX, y: slot.rect.midY + 25)
         }
     }
+    
+    // MARK: - Ball View
     
     private var ballView: some View {
         Group {
@@ -238,6 +251,8 @@ struct ContentView: View {
         }
     }
     
+    // MARK: - Celebration View
+    
     private var celebrationView: some View {
         Group {
             if game.showCelebration {
@@ -259,6 +274,8 @@ struct ContentView: View {
             }
         }
     }
+    
+    // MARK: - Control Buttons
     
     private var controlButtonsView: some View {
         HStack(spacing: 15) {
@@ -324,6 +341,8 @@ struct ContentView: View {
         .frame(maxWidth: .infinity)
     }
     
+    // MARK: - Settings Screen
+    
     private var settingsScreen: some View {
         VStack(spacing: 20) {
             Text("Settings")
@@ -381,7 +400,7 @@ struct ContentView: View {
                     .accentColor(Color(red: 0.0, green: 0.9, blue: 1.0))
                 }
             }
-                        
+            
             Button(action: {
                 game.showResetAllConfirmation()
             }) {
@@ -441,6 +460,8 @@ struct ContentView: View {
         }
     }
     
+    // MARK: - Rating Screen
+    
     private var ratingScreen: some View {
         VStack(spacing: 20) {
             Text("Rating")
@@ -455,57 +476,57 @@ struct ContentView: View {
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(PlinkoTheme.Palette.gold)
-                
-                HStack(spacing: 15) {
-                    VStack {
-                        Text("Total")
-                            .font(.caption)
-                            .foregroundColor(PlinkoTheme.Palette.textSecondary)
-                        Text("\(game.totalScore)")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(PlinkoTheme.Palette.electricBlue)
-                    }
                     
-                    VStack {
-                        Text("Best")
-                            .font(.caption)
-                            .foregroundColor(PlinkoTheme.Palette.textSecondary)
-                        Text("\(game.bestScore)")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(PlinkoTheme.Palette.gold)
+                    HStack(spacing: 15) {
+                        VStack {
+                            Text("Total")
+                                .font(.caption)
+                                .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                            Text("\(game.totalScore)")
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundColor(PlinkoTheme.Palette.electricBlue)
+                        }
+                        
+                        VStack {
+                            Text("Best")
+                                .font(.caption)
+                                .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                            Text("\(game.bestScore)")
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundColor(PlinkoTheme.Palette.gold)
+                        }
+                        
+                        VStack {
+                            Text("Games")
+                                .font(.caption)
+                                .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                            Text("\(game.totalGames)")
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundColor(PlinkoTheme.Palette.neonPink)
+                        }
+                        
+                        VStack {
+                            Text("Efficiency")
+                                .font(.caption)
+                                .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                            Text(String(format: "%.1f", game.efficiencyCoefficient))
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundColor(PlinkoTheme.Palette.spherePrimary)
+                        }
                     }
-                    
-                    VStack {
-                        Text("Games")
-                            .font(.caption)
-                            .foregroundColor(PlinkoTheme.Palette.textSecondary)
-                        Text("\(game.totalGames)")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(PlinkoTheme.Palette.neonPink)
-                    }
-                    
-                    VStack {
-                        Text("Efficiency")
-                            .font(.caption)
-                            .foregroundColor(PlinkoTheme.Palette.textSecondary)
-                        Text(String(format: "%.1f", game.efficiencyCoefficient))
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(PlinkoTheme.Palette.spherePrimary)
-                    }
-                }
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(PlinkoTheme.Palette.backgroundDark.opacity(0.8))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(PlinkoTheme.Palette.gold.opacity(0.5), lineWidth: 2)
-                        )
-                )
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(PlinkoTheme.Palette.backgroundDark.opacity(0.8))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(PlinkoTheme.Palette.gold.opacity(0.5), lineWidth: 2)
+                            )
+                    )
                 }
             }
             
@@ -549,7 +570,7 @@ struct ContentView: View {
                         )
                 )
             }
-
+            
             
             ScrollView {
                 LazyVStack(spacing: 8) {
@@ -558,8 +579,8 @@ struct ContentView: View {
                             HStack {
                                 Text("\(index + 1).")
                                     .font(.title3)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(PlinkoTheme.Palette.gold)
+                    .fontWeight(.bold)
+                    .foregroundColor(PlinkoTheme.Palette.gold)
                                     .frame(width: 30, alignment: .leading)
                                 
                                 Text(score.name)
@@ -574,37 +595,37 @@ struct ContentView: View {
                                     .fontWeight(.bold)
                                     .foregroundColor(PlinkoTheme.Palette.spherePrimary)
                             }
-                            
-                            HStack(spacing: 20) {
-                                VStack {
+                
+                HStack(spacing: 20) {
+                    VStack {
                                     Text("Score")
                                         .font(.caption2)
-                                        .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                            .foregroundColor(PlinkoTheme.Palette.textSecondary)
                                     Text("\(score.score)")
                                         .font(.caption)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(PlinkoTheme.Palette.electricBlue)
-                                }
-                                
-                                VStack {
+                            .fontWeight(.bold)
+                            .foregroundColor(PlinkoTheme.Palette.electricBlue)
+                    }
+                    
+                    VStack {
                                     Text("Total")
                                         .font(.caption2)
-                                        .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                            .foregroundColor(PlinkoTheme.Palette.textSecondary)
                                     Text("\(score.totalScore)")
                                         .font(.caption)
-                                        .fontWeight(.bold)
+                            .fontWeight(.bold)
                                         .foregroundColor(PlinkoTheme.Palette.spherePrimary)
-                                }
-                                
-                                VStack {
+                    }
+                    
+                    VStack {
                                     Text("Best")
                                         .font(.caption2)
-                                        .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                            .foregroundColor(PlinkoTheme.Palette.textSecondary)
                                     Text("\(score.bestScore)")
                                         .font(.caption)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(PlinkoTheme.Palette.gold)
-                                }
+                            .fontWeight(.bold)
+                            .foregroundColor(PlinkoTheme.Palette.gold)
+                    }
                                 
                                 VStack {
                                     Text("Games")
@@ -619,10 +640,10 @@ struct ContentView: View {
                         }
                         .padding(.horizontal)
                         .padding(.vertical, 12)
-                        .background(
+                .background(
                             RoundedRectangle(cornerRadius: 8)
                                 .fill(PlinkoTheme.Palette.backgroundDark.opacity(0.6))
-                                .overlay(
+                        .overlay(
                                     RoundedRectangle(cornerRadius: 8)
                                         .stroke(PlinkoTheme.Palette.neonPink.opacity(0.3), lineWidth: 1)
                                 )
@@ -634,11 +655,11 @@ struct ContentView: View {
             Button(action: {
                 game.showGame()
             }) {
-                HStack {
+                        HStack {
                     Image(systemName: "arrow.left.circle.fill")
                     Text("Back to Game")
                 }
-                .font(.title3)
+                                .font(.title3)
                 .fontWeight(.semibold)
                 .foregroundColor(PlinkoTheme.Palette.textPrimary)
                 .padding(.horizontal, 30)
@@ -664,6 +685,375 @@ struct ContentView: View {
             Text("Do you agree to save the result and start a new session?")
         }
     }
+    
+    // MARK: - Shop & Bonuses Features
+    
+    private var shopAndBonusesButtonsView: some View {
+        HStack(spacing: 20) {
+            Button(action: {
+                game.showShop()
+            }) {
+                HStack {
+                    Image(systemName: "cart.fill")
+                    Text("Shop")
+                }
+                                .font(.title3)
+                .fontWeight(.semibold)
+                                .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .background(PlinkoTheme.Gradient.buttonPrimary)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(PlinkoTheme.Palette.spherePrimary, lineWidth: 2)
+                )
+                .shadow(color: PlinkoTheme.Shadow.sphereShadow, radius: 8)
+            }
+            
+            Button(action: {
+                game.showBonuses()
+            }) {
+                HStack {
+                    Image(systemName: "gift.fill")
+                    Text("Bonuses")
+                }
+                .font(.title3)
+                .fontWeight(.semibold)
+                .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .background(PlinkoTheme.Palette.gold)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(PlinkoTheme.Palette.neonPink, lineWidth: 2)
+                )
+                .shadow(color: PlinkoTheme.Shadow.gold, radius: 8)
+            }
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 10)
+    }
+    
+    // MARK: - Shop Screen
+    
+    private var shopScreen: some View {
+        VStack(spacing: 20) {
+            HStack {
+                Text("Shop")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundColor(PlinkoTheme.Palette.spherePrimary)
+                    .shadow(color: PlinkoTheme.Shadow.sphereGlow, radius: 10)
+                            
+                            Spacer()
+                            
+                HStack {
+                    Image(systemName: "bitcoinsign.circle.fill")
+                        .foregroundColor(PlinkoTheme.Palette.gold)
+                    Text("\(game.playerCoins)")
+                        .font(.title2)
+                                .fontWeight(.bold)
+                        .foregroundColor(PlinkoTheme.Palette.gold)
+                        }
+                .padding(.horizontal, 15)
+                        .padding(.vertical, 8)
+                        .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(PlinkoTheme.Palette.backgroundDark.opacity(0.8))
+                                .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(PlinkoTheme.Palette.gold, lineWidth: 2)
+                        )
+                )
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 40)
+            
+            ScrollView {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 15), count: 3), spacing: 15) {
+                    ForEach(game.shopItems) { item in
+                        ShopItemView(item: item, onPurchase: {
+                            game.purchaseItem(item)
+                        }, onTap: {
+                            game.showBonusDetail(item)
+                        })
+                    }
+                }
+                .padding(.horizontal, 20)
+            }
+            
+            Button(action: {
+                game.showGame()
+            }) {
+                HStack {
+                    Image(systemName: "arrow.left.circle.fill")
+                    Text("Back to Game")
+                }
+                .font(.title3)
+                .fontWeight(.semibold)
+                .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .background(PlinkoTheme.Gradient.buttonPrimary)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(PlinkoTheme.Palette.spherePrimary, lineWidth: 2)
+                )
+                .shadow(color: PlinkoTheme.Shadow.sphereShadow, radius: 8)
+            }
+            .padding(.bottom, 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(PlinkoTheme.Gradient.gameFieldBackground)
+    }
+    
+    // MARK: - Bonuses Screen
+    
+    private var bonusesScreen: some View {
+        VStack(spacing: 20) {
+            Text("Bonuses")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .foregroundColor(PlinkoTheme.Palette.gold)
+                .shadow(color: PlinkoTheme.Shadow.gold, radius: 10)
+                .padding(.top, 40)
+            
+            Text("Coming Soon!")
+                .font(.title2)
+                .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                .padding(.vertical, 50)
+            
+            Spacer()
+            
+            Button(action: {
+                game.showGame()
+            }) {
+                HStack {
+                    Image(systemName: "arrow.left.circle.fill")
+                    Text("Back to Game")
+                }
+                .font(.title3)
+                .fontWeight(.semibold)
+                .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .background(PlinkoTheme.Palette.gold)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(PlinkoTheme.Palette.neonPink, lineWidth: 2)
+                )
+                .shadow(color: PlinkoTheme.Shadow.gold, radius: 8)
+            }
+            .padding(.bottom, 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(PlinkoTheme.Gradient.gameFieldBackground)
+    }
+    
+    
+    // MARK: - Components
+    
+    
+    
+    // MARK: - Bonus Detail Screen
+    
+    private func bonusDetailScreen(item: ShopItem) -> some View {
+        VStack(spacing: 30) {
+            HStack {
+                Button(action: {
+                    game.backToShop()
+                }) {
+                    HStack {
+                        Image(systemName: "arrow.left.circle.fill")
+                        Text("Back")
+                    }
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                    .padding(.horizontal, 15)
+                    .padding(.vertical, 8)
+                    .background(PlinkoTheme.Palette.backgroundDark.opacity(0.8))
+                    .cornerRadius(10)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(item.color, lineWidth: 2)
+                    )
+                }
+                
+                Spacer()
+                
+                HStack {
+                    Image(systemName: "bitcoinsign.circle.fill")
+                        .foregroundColor(PlinkoTheme.Palette.gold)
+                    Text("\(game.playerCoins)")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(PlinkoTheme.Palette.gold)
+                }
+                .padding(.horizontal, 15)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(PlinkoTheme.Palette.backgroundDark.opacity(0.8))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(PlinkoTheme.Palette.gold, lineWidth: 2)
+                        )
+                )
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 40)
+            
+            VStack(spacing: 20) {
+                ZStack {
+                    Circle()
+                        .fill(item.color.opacity(0.3))
+                        .frame(width: 120, height: 120)
+                        .overlay(
+                            Circle()
+                                .stroke(item.color, lineWidth: 4)
+                        )
+                    
+                    Image(systemName: item.icon)
+                        .font(.system(size: 50))
+                        .foregroundColor(item.color)
+                }
+                .shadow(color: item.color.opacity(0.5), radius: 15)
+                
+                VStack(spacing: 15) {
+                    Text(item.name)
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(item.color)
+                        .multilineTextAlignment(.center)
+                    
+                    Text(item.description)
+                        .font(.title3)
+                        .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                        .lineLimit(nil)
+                        .fixedSize(horizontal: false, vertical: true)
+                    
+                    HStack {
+                        Image(systemName: "bitcoinsign.circle.fill")
+                            .foregroundColor(PlinkoTheme.Palette.gold)
+                        Text("\(item.price) coins")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(PlinkoTheme.Palette.gold)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 15)
+                            .fill(PlinkoTheme.Palette.backgroundDark.opacity(0.8))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 15)
+                                    .stroke(PlinkoTheme.Palette.gold, lineWidth: 2)
+                            )
+                    )
+                    
+                    VStack(spacing: 8) {
+                        Text("Effect Details:")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .foregroundColor(item.color)
+                        
+                        Text(getEffectDetails(for: item))
+                            .font(.body)
+                            .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 20)
+                    }
+                    .padding(.vertical, 15)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(PlinkoTheme.Palette.backgroundDark.opacity(0.6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(item.color.opacity(0.3), lineWidth: 1)
+                            )
+                    )
+                    .padding(.horizontal, 20)
+                }
+            }
+            
+            Spacer()
+            
+            Button(action: {
+                game.purchaseItem(item)
+            }) {
+                HStack {
+                    Image(systemName: item.isPurchased ? "checkmark.circle.fill" : "cart.fill")
+                    Text(item.isPurchased ? "Owned" : "Purchase")
+                }
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                .padding(.horizontal, 40)
+                .padding(.vertical, 15)
+                .background(
+                    item.isPurchased ?
+                    PlinkoTheme.Palette.gold.opacity(0.3) :
+                        item.color.opacity(0.8)
+                )
+                .cornerRadius(15)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(
+                            item.isPurchased ?
+                            PlinkoTheme.Palette.gold :
+                                item.color,
+                            lineWidth: 3
+                        )
+                )
+                .shadow(color: item.color.opacity(0.5), radius: 10)
+            }
+            .disabled(item.isPurchased || !item.isAvailable || game.playerCoins < item.price)
+            .padding(.bottom, 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(PlinkoTheme.Gradient.gameFieldBackground)
+    }
+    
+    private func getEffectDetails(for item: ShopItem) -> String {
+        switch item.name {
+        case "Score Multiplier":
+            return "• Activates for next 5 balls\n• All points are doubled\n• Perfect timing for high-value slots\n• Visual: Ball glows red"
+            
+        case "Magnetic Ball":
+            return "• Ball curves toward highest slots\n• Magnetic force: 0.3 strength\n• Increases accuracy significantly\n• Visual: Blue trail effect"
+            
+        case "Shield Ball":
+            return "• Ignores all pin collisions\n• Flies straight to slots\n• Guaranteed slot hit\n• Visual: Green shield around ball"
+            
+        case "Pin Destroyer":
+            return "• Removes every 2nd pin\n• Duration: 20 seconds\n• Makes field much easier\n• Visual: Pins disappear with animation"
+            
+        case "Double Points":
+            return "• All slots give 2x points\n• Duration: 20 seconds\n• Works with other multipliers\n• Visual: Slots glow blue"
+            
+        case "Slot Shuffle":
+            return "• Randomizes slot positions\n• Instant effect\n• Adds challenge and excitement\n• Visual: Slots rearrange with animation"
+            
+        case "Triple Ball":
+            return "• Launches 3 balls simultaneously\n• Each ball can score points\n• Triple scoring potential\n• Visual: 3 balls with slight offset"
+            
+        case "Six Ball":
+            return "• Launches 6 balls at once\n• Maximum scoring potential\n• Can earn 500+ points\n• Visual: Fan pattern launch"
+            
+        case "Neon Theme":
+            return "• Glowing effects on all elements\n• Pins have neon glow\n• Slots pulse with colors\n• Visual: Bright trail effects"
+            
+        default:
+            return "Special effect details coming soon!"
+        }
+    }
 }
 
 struct StatView: View {
@@ -682,6 +1072,157 @@ struct StatView: View {
                 .fontWeight(.bold)
                 .foregroundColor(color)
                 .shadow(color: shadow, radius: 5)
+        }
+    }
+}
+
+struct ShopItemView: View {
+    let item: ShopItem
+    let onPurchase: () -> Void
+    let onTap: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            ZStack {
+                Circle()
+                    .fill(itemBackgroundColor)
+                    .frame(width: 60, height: 60)
+                    .overlay(
+                        Circle()
+                            .stroke(itemBorderColor, lineWidth: 2)
+                    )
+                
+                Image(systemName: item.icon)
+                    .font(.title2)
+                    .foregroundColor(itemIconColor)
+            }
+            
+            VStack(spacing: 4) {
+                Text(item.name)
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(PlinkoTheme.Palette.textPrimary)
+                    .multilineTextAlignment(.center)
+                
+                Text(item.description)
+                    .font(.caption2)
+                    .foregroundColor(PlinkoTheme.Palette.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                
+                HStack {
+                    Image(systemName: "bitcoinsign.circle.fill")
+                        .foregroundColor(PlinkoTheme.Palette.gold)
+                        .font(.caption2)
+                    Text("\(item.price)")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(PlinkoTheme.Palette.gold)
+                }
+            }
+            
+            Button(action: onPurchase) {
+                Text(buttonText)
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(buttonTextColor)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(buttonBackgroundColor)
+                    .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(buttonBorderColor, lineWidth: 1)
+                    )
+            }
+            .disabled(!canPurchase)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(PlinkoTheme.Palette.backgroundDark.opacity(0.8))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(itemBorderColor.opacity(0.5), lineWidth: 1)
+                )
+        )
+        .shadow(color: PlinkoTheme.Shadow.sphereShadow, radius: 5)
+        .onTapGesture {
+            onTap()
+        }
+    }
+    
+    private var canPurchase: Bool {
+        !item.isPurchased && item.isAvailable
+    }
+    
+    private var buttonText: String {
+        if item.isPurchased {
+            return "Owned"
+        } else if !item.isAvailable {
+            return "Locked"
+        } else {
+            return "Buy"
+        }
+    }
+    
+    private var itemBackgroundColor: Color {
+        if item.isPurchased {
+            return PlinkoTheme.Palette.gold.opacity(0.3)
+        } else if !item.isAvailable {
+            return PlinkoTheme.Palette.darkGray
+        } else {
+            return item.color.opacity(0.2)
+        }
+    }
+    
+    private var itemBorderColor: Color {
+        if item.isPurchased {
+            return PlinkoTheme.Palette.gold
+        } else if !item.isAvailable {
+            return PlinkoTheme.Palette.textTertiary
+        } else {
+            return item.color
+        }
+    }
+    
+    private var itemIconColor: Color {
+        if item.isPurchased {
+            return PlinkoTheme.Palette.gold
+        } else if !item.isAvailable {
+            return PlinkoTheme.Palette.textTertiary
+        } else {
+            return item.color
+        }
+    }
+    
+    private var buttonTextColor: Color {
+        if item.isPurchased {
+            return PlinkoTheme.Palette.gold
+        } else if !item.isAvailable {
+            return PlinkoTheme.Palette.textTertiary
+        } else {
+            return PlinkoTheme.Palette.textPrimary
+        }
+    }
+    
+    private var buttonBackgroundColor: Color {
+        if item.isPurchased {
+            return PlinkoTheme.Palette.gold.opacity(0.2)
+        } else if !item.isAvailable {
+            return PlinkoTheme.Palette.darkGray
+        } else {
+            return item.color.opacity(0.3)
+        }
+    }
+    
+    private var buttonBorderColor: Color {
+        if item.isPurchased {
+            return PlinkoTheme.Palette.gold
+        } else if !item.isAvailable {
+            return PlinkoTheme.Palette.textTertiary
+        } else {
+            return item.color
         }
     }
 }

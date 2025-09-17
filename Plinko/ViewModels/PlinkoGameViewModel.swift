@@ -19,6 +19,13 @@ class PlinkoGameViewModel: ObservableObject {
     @Published var efficiencyCoefficient: Double = 0.0
     @Published var showSaveConfirmation: Bool = false
     @Published var showResetConfirmation: Bool = false
+    @Published var shopItems: [ShopItem] = []
+    @Published var playerCoins: Int = 0
+    @Published var selectedBonusItem: ShopItem?
+    
+    var purchasedBonusesCount: Int {
+        shopItems.filter { $0.isPurchased }.count
+    }
     
     private var pins: [Pin] = []
     private var slots: [Slot] = []
@@ -39,6 +46,7 @@ class PlinkoGameViewModel: ObservableObject {
         setupGame()
         loadScoresFromUserDefaults()
         resetPlayerStatistics()
+        setupShopItems()
     }
     
     private func setupGame() {
@@ -185,6 +193,7 @@ class PlinkoGameViewModel: ObservableObject {
             if slot.rect.contains(currentBall.position) {
                 score += slot.points
                 totalScore += slot.points
+                earnCoins(slot.points)
                 SoundManager.shared.playSlotHit()
                 
                 totalGames += 1
@@ -261,6 +270,24 @@ class PlinkoGameViewModel: ObservableObject {
     
     func showGame() {
         currentScreen = .game
+    }
+    
+    func showShop() {
+        currentScreen = .shop
+    }
+    
+    func showBonuses() {
+        currentScreen = .bonuses
+    }
+    
+    func showBonusDetail(_ item: ShopItem) {
+        selectedBonusItem = item
+        currentScreen = .bonusDetail(item)
+    }
+    
+    func backToShop() {
+        currentScreen = .shop
+        selectedBonusItem = nil
     }
     
     func saveScore() {
@@ -351,6 +378,46 @@ class PlinkoGameViewModel: ObservableObject {
         totalGames = 0
         score = 0
         showCelebration = false
+        playerCoins = 0
+    }
+    
+    // MARK: - Shop Methods
+    
+    private func setupShopItems() {
+        shopItems = [
+            ShopItem(name: "Score Multiplier", description: "Doubles points for next 5 balls. Perfect for maximizing your score when you're on a hot streak!", price: 200, icon: "multiply.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .red),
+            ShopItem(name: "Magnetic Ball", description: "Attracts to highest value slots. The ball will curve towards the most valuable slots automatically!", price: 300, icon: "magnet.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .blue),
+            ShopItem(name: "Shield Ball", description: "Ignores pin collisions and flies straight down. Guaranteed to reach a slot without bouncing off pins!", price: 400, icon: "shield.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .green),
+            ShopItem(name: "Pin Destroyer", description: "Removes every second pin for 20 seconds. Makes the field much easier to navigate and score!", price: 350, icon: "trash.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .red),
+            ShopItem(name: "Double Points", description: "All slots give 2x points for 20 seconds. Every hit becomes twice as valuable!", price: 400, icon: "2.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .blue),
+            ShopItem(name: "Slot Shuffle", description: "Randomizes all slot positions. Adds excitement and challenge by changing the layout!", price: 300, icon: "shuffle.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .green),
+            ShopItem(name: "Triple Ball", description: "Launches 3 balls instead of 1. Triple your chances of scoring big points!", price: 500, icon: "3.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .yellow),
+            ShopItem(name: "Six Ball", description: "Launches 6 balls at once! Maximum scoring potential - can earn hundreds of points!", price: 800, icon: "6.circle.fill", type: .powerUp, isPurchased: false, isAvailable: true, color: .orange),
+            ShopItem(name: "Neon Theme", description: "Adds glowing neon effects to all game elements. Pure visual enhancement for style!", price: 250, icon: "lightbulb.fill", type: .cosmetic, isPurchased: false, isAvailable: true, color: .purple)
+        ]
+    }
+    
+    func purchaseItem(_ item: ShopItem) {
+        guard !item.isPurchased && item.isAvailable && playerCoins >= item.price else { return }
+        
+        playerCoins -= item.price
+        
+        if let index = shopItems.firstIndex(where: { $0.id == item.id }) {
+            shopItems[index] = ShopItem(
+                name: item.name,
+                description: item.description,
+                price: item.price,
+                icon: item.icon,
+                type: item.type,
+                isPurchased: true,
+                isAvailable: item.isAvailable,
+                color: item.color
+            )
+        }
+    }
+    
+    func earnCoins(_ amount: Int) {
+        playerCoins += amount
     }
 }
 
@@ -358,6 +425,9 @@ enum GameScreen {
     case game
     case settings
     case rating
+    case shop
+    case bonuses
+    case bonusDetail(ShopItem)
 }
 
 struct PlayerScore: Codable, Identifiable {
@@ -408,4 +478,25 @@ enum GravityStrength: String, CaseIterable {
         case .heavy: return 0.5
         }
     }
+}
+
+// MARK: - Shop Models
+
+struct ShopItem: Identifiable {
+    let id = UUID()
+    let name: String
+    let description: String
+    let price: Int
+    let icon: String
+    let type: ShopItemType
+    let isPurchased: Bool
+    let isAvailable: Bool
+    let color: Color
+}
+
+enum ShopItemType {
+    case powerUp
+    case ballType
+    case cosmetic
+    case upgrade
 }
